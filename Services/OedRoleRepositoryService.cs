@@ -25,7 +25,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
     {
         await using var dataSource = _dataSourceBuilder.Build();
 
-        await using var cmd = dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (estateSsn, recipientSsn, roleCode, created) VALUES ($1, $2, $3, $4)");
+        await using var cmd = dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\") VALUES ($1, $2, $3, $4)");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
@@ -37,7 +37,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
     private async Task<List<OedRoleAssignment>> Query(string? estateSsn, string? recipientSsn)
     {
 
-        var baseSql = "SELECT estateSsn, recipientSsn, roleCode, created FROM oedauthz.roleassignments";
+        var baseSql = "SELECT \"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\" FROM oedauthz.roleassignments";
 
         if (estateSsn != null && !Utils.IsValidSsn(estateSsn))
         {
@@ -54,18 +54,18 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
         if (estateSsn != null && recipientSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE estateSsn = $1 AND recipientSsn = $2");
+            cmd = dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2");
             cmd.Parameters.AddWithValue(estateSsn);
             cmd.Parameters.AddWithValue(recipientSsn);
         }
         else if (estateSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE estateSsn = $1");
+            cmd = dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1");
             cmd.Parameters.AddWithValue(estateSsn);
         }
         else if (recipientSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE recipientSsn = $1");
+            cmd = dataSource.CreateCommand(baseSql + " WHERE \"recipientSsn\" = $1");
             cmd.Parameters.AddWithValue(recipientSsn);
         }
         else

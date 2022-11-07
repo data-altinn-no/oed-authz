@@ -1,7 +1,7 @@
 ﻿using oed_authz.Models;
 
 namespace oed_authz.Interfaces;
-public interface IEventHandlerService
+public interface IAltinnEventHandlerService
 {
     public Task HandleDaEvent(CloudEventRequestModel daEvent);
 }

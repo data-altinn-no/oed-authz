@@ -3,7 +3,10 @@
     "oed_authz": {
       "commandName": "Project",
       "commandLineArgs": "--port 7248",
-      "launchBrowser": false
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

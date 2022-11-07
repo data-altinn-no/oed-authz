@@ -2,11 +2,11 @@
 using oed_authz.Models;
 
 namespace oed_authz.Services;
-public class EventHandlerService : IEventHandlerService
+public class AltinnEventHandlerService : IAltinnEventHandlerService
 {
     private readonly IOedRoleRepositoryService _oedRoleRepositoryService;
 
-    public EventHandlerService(IOedRoleRepositoryService oedRoleRepositoryService)
+    public AltinnEventHandlerService(IOedRoleRepositoryService oedRoleRepositoryService)
     {
         _oedRoleRepositoryService = oedRoleRepositoryService;
     }

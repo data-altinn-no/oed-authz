@@ -7,18 +7,18 @@ using oed_authz.Models;
 
 namespace oed_authz
 {
-    public class EventHandler
+    public class AltinnEventHandler
     {
-        private readonly IEventHandlerService _eventHandlerService;
+        private readonly IAltinnEventHandlerService _altinnEventHandlerService;
         private readonly ILogger _logger;
 
-        public EventHandler(ILoggerFactory loggerFactory, IEventHandlerService eventHandlerService)
+        public AltinnEventHandler(ILoggerFactory loggerFactory, IAltinnEventHandlerService altinnEventHandlerService)
         {
-            _eventHandlerService = eventHandlerService;
-            _logger = loggerFactory.CreateLogger<EventHandler>();
+            _altinnEventHandlerService = altinnEventHandlerService;
+            _logger = loggerFactory.CreateLogger<AltinnEventHandler>();
         }
 
-        [Function(nameof(EventHandler))]
+        [Function(nameof(AltinnEventHandler))]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req)
         {
 
@@ -29,7 +29,7 @@ namespace oed_authz
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            await _eventHandlerService.HandleDaEvent(daEvent);
+            await _altinnEventHandlerService.HandleDaEvent(daEvent);
 
             return req.CreateResponse(HttpStatusCode.OK);
         }

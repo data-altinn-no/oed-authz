@@ -15,6 +15,9 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.8.0-preview2">
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1">
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
     <PackageReference Include="Npgsql" Version="7.0.0-rc.2" />
   </ItemGroup>
   <ItemGroup>

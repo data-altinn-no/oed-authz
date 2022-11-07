@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using oed_authz;
 using oed_authz.Interfaces;
 using oed_authz.Services;
 using oed_authz.Settings;
@@ -18,7 +19,7 @@ var host = new HostBuilder()
 
         if (hostContext.HostingEnvironment.IsDevelopment())
         {
-            config.AddUserSecrets<EventHandler>(false);
+            config.AddUserSecrets<AltinnEventHandler>(false);
         }
     })
     // TODO Workaround for https://github.com/Azure/azure-functions-dotnet-worker/issues/1090
@@ -49,7 +50,7 @@ var host = new HostBuilder()
     {
         services.Configure<ConnectionStrings>(context.Configuration.GetSection("ConnectionStrings"));
 
-        services.AddSingleton<IEventHandlerService, EventHandlerService>();
+        services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
         services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
         services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
 
