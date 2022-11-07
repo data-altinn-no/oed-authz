@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+
+    // Do not define secrets here. Either use keyvault references or user secrets. 
+    // - For key vault make sure you're authenticated in VS, and your user has access to "oed-kv"
+    // - For user secrets, run in project root:
+    //       dotnet user-secrets set "ConnectionStrings:PostgreSql" "<connection string here>"
+
+    "ConnectionStrings:PostgreSql": "Server=someserver;Username=someuser;Database=somedb;Port=5432;Password=somepassword;SSLMode=Prefer"
+  }
+}

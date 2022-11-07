@@ -1,0 +1,15 @@
+﻿{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Function": "Debug",
+      "Host.Aggregator": "Debug",
+      "Host.Results": "Debug"
+    },
+    "ApplicationInsights": {
+      "SamplingSettings": {
+        "IsEnabled": false
+      }
+    }
+  }
+}
