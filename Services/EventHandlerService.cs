@@ -50,11 +50,11 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
         var roleCode = eventRoleAssignment.RoleCode switch
         {
-            "formuesfullmakt" => "urn:digitaltdodsbo:formuesfullmakt",
-            "kandidatarving_partnerEllerEktefelle" => "urn:digitaltdodsbo:arving:partnerEllerEktefelle",
-            "kandidatarving_barn" => "urn:digitaltdodsbo:arving:barn",
-            "kandidatarving_mor" => "urn:digitaltdodsbo:arving:mor",
-            "kandidatarving_far" => "urn:digitaltdodsbo:arving:far",
+            "formuesfullmakt"                       => "urn:digitaltdodsbo:formuesfullmakt",
+            "kandidatarving_partnerEllerEktefelle"  => "urn:digitaltdodsbo:arving:partnerEllerEktefelle",
+            "kandidatarving_barn"                   => "urn:digitaltdodsbo:arving:barn",
+            "kandidatarving_mor"                    => "urn:digitaltdodsbo:arving:mor",
+            "kandidatarving_far"                    => "urn:digitaltdodsbo:arving:far",
             _ => throw new ArgumentOutOfRangeException(nameof(eventRoleAssignment.RoleCode))
         };
 

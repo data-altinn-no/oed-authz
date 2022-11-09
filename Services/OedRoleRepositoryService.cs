@@ -8,21 +8,27 @@ namespace oed_authz.Services;
 public class OedRoleRepositoryService : IOedRoleRepositoryService
 {
     private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
+    private NpgsqlDataSource? _dataSource;
 
-    public OedRoleRepositoryService(IOptions<ConnectionStrings> connectionStrings, ILoggerFactory loggerFactory)
+    public OedRoleRepositoryService(IOptions<ConnectionStrings> connectionStrings)
     {
         _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStrings.Value.PostgreSql);
     }
 
+    ~OedRoleRepositoryService()
+    {
+        _dataSource?.Dispose();
+    }
+
     public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? recipientSsnOnly = null) => await Query(estateSsn, recipientSsnOnly);
     
-    public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForUser(string recipientSsn, string? estateSsnOnly = null) =>  await Query(estateSsnOnly, recipientSsn);
+    public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForUser(string recipientSsn, string? estateSsnOnly = null) => await Query(estateSsnOnly, recipientSsn);
 
     public async Task AddRoleAssignment(OedRoleAssignment roleAssignment)
     {
-        await using var dataSource = _dataSourceBuilder.Build();
+        _dataSource ??= _dataSourceBuilder.Build();
 
-        await using var cmd = dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\") VALUES ($1, $2, $3, $4)");
+        await using var cmd = _dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\") VALUES ($1, $2, $3, $4)");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
@@ -33,9 +39,9 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
     public async Task RemoveRoleAssignment(OedRoleAssignment roleAssignment)
     {
-        await using var dataSource = _dataSourceBuilder.Build();
+        _dataSource ??= _dataSourceBuilder.Build();
 
-        await using var cmd = dataSource.CreateCommand("DELETE FROM oedauthz.roleassignments WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2 AND \"roleCode\"= $3");
+        await using var cmd = _dataSource.CreateCommand("DELETE FROM oedauthz.roleassignments WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2 AND \"roleCode\" = $3");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
@@ -45,25 +51,26 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
     private async Task<List<OedRoleAssignment>> Query(string? estateSsn, string? recipientSsn)
     {
+        _dataSource ??= _dataSourceBuilder.Build();
+
         var baseSql = "SELECT \"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\" FROM oedauthz.roleassignments";
 
-        await using var dataSource = _dataSourceBuilder.Build();
         NpgsqlCommand cmd;
 
         if (estateSsn != null && recipientSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2");
+            cmd = _dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2");
             cmd.Parameters.AddWithValue(estateSsn);
             cmd.Parameters.AddWithValue(recipientSsn);
         }
         else if (estateSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1");
+            cmd = _dataSource.CreateCommand(baseSql + " WHERE \"estateSsn\" = $1");
             cmd.Parameters.AddWithValue(estateSsn);
         }
         else if (recipientSsn != null)
         {
-            cmd = dataSource.CreateCommand(baseSql + " WHERE \"recipientSsn\" = $1");
+            cmd = _dataSource.CreateCommand(baseSql + " WHERE \"recipientSsn\" = $1");
             cmd.Parameters.AddWithValue(recipientSsn);
         }
         else
@@ -94,7 +101,4 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
             await cmd.DisposeAsync();
         }
     }
-
-
-
 }

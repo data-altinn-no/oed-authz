@@ -5,8 +5,6 @@ using oed_authz.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -27,7 +25,6 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -40,7 +37,11 @@ else
 }
 
 app.UseHttpsRedirection();
+
+// TODO Add authentication checks to both endpoints
 //app.UseAuthentication();
+
+// TODO Ensure subscription is active upon app start 
 app.MapControllers();
 
 app.Run();
