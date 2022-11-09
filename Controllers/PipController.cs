@@ -18,7 +18,17 @@ public class PipController : Controller
     [HttpPost]
     public async Task<ActionResult<PipResponse>> Index([FromBody] PipRequest pipRequest)
     {
-        var pipResponse = await _pipService.HandlePipRequest(pipRequest);
-        return new OkObjectResult(pipResponse);
+        try
+        {
+            return Ok(await _pipService.HandlePipRequest(pipRequest));
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(
+                title: "Bad Input",
+                detail: ex.GetType().Name + ": " + ex.Message,
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
     }
 }

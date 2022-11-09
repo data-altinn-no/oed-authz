@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Npgsql;
 using oed_authz.Interfaces;
 using oed_authz.Models;
@@ -13,8 +12,6 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
     public OedRoleRepositoryService(IOptions<ConnectionStrings> connectionStrings, ILoggerFactory loggerFactory)
     {
         _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStrings.Value.PostgreSql);
-        _dataSourceBuilder.UseLoggerFactory(loggerFactory); // Configure logging
-       
     }
 
     public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? recipientSsnOnly = null) => await Query(estateSsn, recipientSsnOnly);
@@ -34,20 +31,21 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
         await cmd.ExecuteNonQueryAsync();
     }
 
+    public async Task RemoveRoleAssignment(OedRoleAssignment roleAssignment)
+    {
+        await using var dataSource = _dataSourceBuilder.Build();
+
+        await using var cmd = dataSource.CreateCommand("DELETE FROM oedauthz.roleassignments WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2 AND \"roleCode\"= $3");
+        cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
+        cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
+        cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
     private async Task<List<OedRoleAssignment>> Query(string? estateSsn, string? recipientSsn)
     {
-
         var baseSql = "SELECT \"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\" FROM oedauthz.roleassignments";
-
-        if (estateSsn != null && !Utils.IsValidSsn(estateSsn))
-        {
-            throw new ArgumentException(nameof(estateSsn));
-        }
-
-        if (recipientSsn != null && !Utils.IsValidSsn(recipientSsn))
-        {
-            throw new ArgumentException(nameof(recipientSsn));
-        }
 
         await using var dataSource = _dataSourceBuilder.Build();
         NpgsqlCommand cmd;

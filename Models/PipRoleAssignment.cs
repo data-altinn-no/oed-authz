@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace oed_authz.Models;
+﻿namespace oed_authz.Models;
 public class PipRoleAssignment
 {
     public string CoveredBy { get; set; } = string.Empty;

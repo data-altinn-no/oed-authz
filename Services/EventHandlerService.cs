@@ -1,4 +1,5 @@
-﻿using oed_authz.Interfaces;
+﻿using System.Text.Json;
+using oed_authz.Interfaces;
 using oed_authz.Models;
 
 namespace oed_authz.Services;
@@ -13,11 +14,20 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
     public async Task HandleDaEvent(CloudEventRequestModel daEvent)
     {
-        if (daEvent.Type != "roleAssignment")
+        switch (daEvent.Type)
         {
-            throw new ArgumentOutOfRangeException(nameof(daEvent.Type));
+            case "roleAssignment":
+                await _oedRoleRepositoryService.AddRoleAssignment(GetOedRoleAssignment(daEvent));
+                break;
+            case "roleRevocation":
+                await _oedRoleRepositoryService.RemoveRoleAssignment(GetOedRoleAssignment(daEvent));
+                break;
+            default: throw new ArgumentOutOfRangeException(nameof(daEvent.Type));
         }
+    }
 
+    private OedRoleAssignment GetOedRoleAssignment(CloudEventRequestModel daEvent)
+    {
         if (daEvent.AlternativeSubject == null)
         {
             throw new ArgumentNullException(nameof(daEvent.AlternativeSubject));
@@ -31,10 +41,12 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
         var estateSsn = alternativeSubject[1];
 
-        if (daEvent.Data is not EventRoleAssignmentData eventRoleAssignment)
+        if (daEvent.Data == null)
         {
-            throw new ArgumentException(nameof(daEvent.Data));
+            throw new ArgumentNullException(nameof(daEvent.Data));
         }
+
+        var eventRoleAssignment = JsonSerializer.Deserialize<EventRoleAssignmentData>(daEvent.Data.ToString()!)!;
 
         var roleCode = eventRoleAssignment.RoleCode switch
         {
@@ -51,13 +63,12 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             throw new ArgumentException(nameof(eventRoleAssignment.Recipient));
         }
 
-        var oedRoleAssignment = new OedRoleAssignment
+        return new OedRoleAssignment
         {
             EstateSsn = estateSsn,
             RecipientSsn = eventRoleAssignment.Recipient,
-            RoleCode = roleCode
+            RoleCode = roleCode,
+            Created = DateTimeOffset.UtcNow
         };
-
-        await _oedRoleRepositoryService.AddRoleAssignment(oedRoleAssignment);
     }
 }

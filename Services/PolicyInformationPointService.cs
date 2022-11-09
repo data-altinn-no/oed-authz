@@ -13,7 +13,17 @@ public class PolicyInformationPointService : IPolicyInformationPointService
 
     public async Task<PipResponse> HandlePipRequest(PipRequest pipRequest)
     {
-        var results = new List<OedRoleAssignment>();
+        if (pipRequest.CoveredBy != null && !Utils.IsValidSsn(pipRequest.CoveredBy))
+        {
+            throw new ArgumentException(nameof(pipRequest.CoveredBy));
+        }
+
+        if (pipRequest.OfferedBy != null && !Utils.IsValidSsn(pipRequest.OfferedBy))
+        {
+            throw new ArgumentException(nameof(pipRequest.OfferedBy));
+        }
+
+        List<OedRoleAssignment> results;
         if (pipRequest.CoveredBy != null && pipRequest.OfferedBy != null)
         {
             results = await _oedRoleRepositoryService.GetRoleAssignmentsForUser(pipRequest.CoveredBy, pipRequest.OfferedBy);
@@ -25,6 +35,10 @@ public class PolicyInformationPointService : IPolicyInformationPointService
         else if (pipRequest.OfferedBy != null)
         {
             results = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(pipRequest.OfferedBy);
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(pipRequest), "Both offeredBy and coveredBy cannot be null");
         }
 
         var pipResponse = new PipResponse();

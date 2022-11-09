@@ -17,6 +17,8 @@ builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryServic
 builder.Services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
 
 builder.Services.AddControllers();
+builder.Services.AddLogging();
+builder.Services.AddProblemDetails();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -30,10 +32,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseExceptionHandler("/error-development");
+}
+else
+{
+    app.UseExceptionHandler("/error");
 }
 
 app.UseHttpsRedirection();
-app.UseDeveloperExceptionPage();
 //app.UseAuthentication();
 app.MapControllers();
 

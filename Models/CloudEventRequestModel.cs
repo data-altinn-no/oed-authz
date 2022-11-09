@@ -1,4 +1,4 @@
-﻿using System.Net.Mime;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace oed_authz.Models;
@@ -20,7 +20,8 @@ public class CloudEventRequestModel
     /// Gets or sets the type of the event.
     /// </summary>
     [JsonPropertyName("type")]
-    public string Type { get; set; } = string.Empty;
+    [Required]
+    public string Type { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the subject of the event.
@@ -32,14 +33,16 @@ public class CloudEventRequestModel
     /// Gets or sets the alternative subject of the event.
     /// </summary>
     [JsonPropertyName("alternativesubject"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? AlternativeSubject { get; set; }
+    [Required]
+    public string AlternativeSubject { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the cloudEvent data content. The event payload.
     /// The payload depends on the type and the dataschema.
     /// </summary>
     [JsonPropertyName("data"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public object? Data { get; set; }
+    [Required]
+    public object Data { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the cloudEvent dataschema attribute.
@@ -53,5 +56,5 @@ public class CloudEventRequestModel
     /// Content type of the data attribute value.
     /// </summary>
     [JsonPropertyName("contenttype"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public ContentType? DataContentType { get; set; }
+    public string? DataContentType { get; set; }
 }
