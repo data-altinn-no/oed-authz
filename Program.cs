@@ -1,61 +1,40 @@
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-using oed_authz;
+using System.Reflection;
 using oed_authz.Interfaces;
 using oed_authz.Services;
 using oed_authz.Settings;
 
+var builder = WebApplication.CreateBuilder(args);
 
-var host = new HostBuilder()
-    .ConfigureAppConfiguration((hostContext, config) =>
-    {
-        config
-            .AddEnvironmentVariables()
-            .AddJsonFile("worker.json");
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-        if (hostContext.HostingEnvironment.IsDevelopment())
-        {
-            config.AddUserSecrets<AltinnEventHandler>(false);
-        }
-    })
-    // TODO Workaround for https://github.com/Azure/azure-functions-dotnet-worker/issues/1090
-    .ConfigureLogging(loggingBuilder =>
-    {
-        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-        {
-            loggingBuilder.AddSimpleConsole(options =>
-            {
-                options.ColorBehavior = LoggerColorBehavior.Enabled;
-                options.SingleLine = true;
-            });
-        }
-    })
-    .ConfigureFunctionsWorkerDefaults(builder =>
-    {
-        builder
-            // Using preview package Microsoft.Azure.Functions.Worker.ApplicationInsights, see https://github.com/Azure/azure-functions-dotnet-worker/pull/944
-            // Requires APPLICATIONINSIGHTS_CONNECTION_STRING being set. Note that host.json logging settings will have to be replicated to worker.json
-            .AddApplicationInsights()
-            .AddApplicationInsightsLogger();
+builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
 
-    }, options =>
-    {
-        //options.Serializer = new NewtonsoftJsonObjectSerializer();
-    })
-    .ConfigureServices((context, services) =>
-    {
-        services.Configure<ConnectionStrings>(context.Configuration.GetSection("ConnectionStrings"));
+builder.Services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
+builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
+builder.Services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
 
-        services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
-        services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
-        services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
+builder.Services.AddControllers();
 
-    })
-    .Build();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
+}
 
-host.Run();
+var app = builder.Build();
 
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseDeveloperExceptionPage();
+//app.UseAuthentication();
+app.MapControllers();
+
+app.Run();
