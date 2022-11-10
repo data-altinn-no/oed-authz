@@ -1,7 +1,8 @@
-﻿namespace oed_authz.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace oed_authz.Models;
 public class PipRoleAssignment
 {
-    public string CoveredBy { get; set; } = string.Empty;
-    public string OfferedBy { get; set; } = string.Empty;
+    [JsonPropertyName("urn:oed:rolecode")]
     public string RoleCode { get; set; } = string.Empty;
 }

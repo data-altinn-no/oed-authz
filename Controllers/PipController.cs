@@ -19,7 +19,7 @@ public class PipController : Controller
 
     [HttpPost]
     [Authorize(Policy = Constants.AuthenticationPolicyForPlatformAuthorization)]
-    public async Task<ActionResult<PipResponse>> Index([FromBody] PipRequest pipRequest)
+    public async Task<ActionResult<List<PipRoleAssignment>>> Index([FromBody] PipRequest pipRequest)
     {
         try
         {

@@ -1,8 +1,12 @@
-﻿namespace oed_authz.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace oed_authz.Models;
 
 public class PipRequest
 {
-    public string? CoveredBy { get; set; }
-    public string? OfferedBy { get; set; }
+    [Required]
+    public string CoveredBy { get; set; } = null!;
+    [Required]
+    public string OfferedBy { get; set; } = null!;
 }
 
