@@ -30,7 +30,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
         await using var cmd = _dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\") VALUES ($1, $2, $3, $4)");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
-        cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
+        cmd.Parameters.AddWithValue(roleAssignment.Recipient);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
         cmd.Parameters.AddWithValue(roleAssignment.Created);
 
@@ -43,7 +43,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
         await using var cmd = _dataSource.CreateCommand("DELETE FROM oedauthz.roleassignments WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2 AND \"roleCode\" = $3");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
-        cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
+        cmd.Parameters.AddWithValue(roleAssignment.Recipient);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
 
         await cmd.ExecuteNonQueryAsync();
@@ -88,7 +88,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
                 roleAssignments.Add(new OedRoleAssignment
                 {
                     EstateSsn = reader.GetString(0),
-                    RecipientSsn = reader.GetString(1),
+                    Recipient = reader.GetString(1),
                     RoleCode = reader.GetString(2),
                     Created = reader.GetDateTime(3)
                 });
