@@ -20,7 +20,7 @@ public class EventController : Controller
 
     [HttpPost]
     [Authorize(Policy = Constants.AuthenticationPolicyForPlatformEvents)]
-    public async Task<IActionResult> Index([FromBody] CloudEventRequestModel daEvent)
+    public async Task<IActionResult> Index([FromBody] CloudEvent daEvent)
     {
         try
         {

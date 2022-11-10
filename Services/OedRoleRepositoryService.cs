@@ -22,7 +22,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
     public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? recipientSsnOnly = null) => await Query(estateSsn, recipientSsnOnly);
     
-    public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForUser(string recipientSsn, string? estateSsnOnly = null) => await Query(estateSsnOnly, recipientSsn);
+    public async Task<List<OedRoleAssignment>> GetRoleAssignmentsForPerson(string recipientSsn, string? estateSsnOnly = null) => await Query(estateSsnOnly, recipientSsn);
 
     public async Task AddRoleAssignment(OedRoleAssignment roleAssignment)
     {

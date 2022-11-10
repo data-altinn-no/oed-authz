@@ -12,34 +12,34 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         _oedRoleRepositoryService = oedRoleRepositoryService;
     }
 
-    public async Task HandleDaEvent(CloudEventRequestModel daEvent)
+    public async Task HandleDaEvent(CloudEvent daEvent)
     {
         switch (daEvent.Type)
         {
             case "roleAssignment":
-                await _oedRoleRepositoryService.AddRoleAssignment(GetOedRoleAssignment(daEvent));
+                foreach (var roleAssignment in GetOedRoleAssignments(daEvent)) await _oedRoleRepositoryService.AddRoleAssignment(roleAssignment);
                 break;
             case "roleRevocation":
-                await _oedRoleRepositoryService.RemoveRoleAssignment(GetOedRoleAssignment(daEvent));
+                foreach (var roleAssignment in GetOedRoleAssignments(daEvent)) await _oedRoleRepositoryService.RemoveRoleAssignment(roleAssignment);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(daEvent.Type));
         }
     }
 
-    private OedRoleAssignment GetOedRoleAssignment(CloudEventRequestModel daEvent)
+    private List<OedRoleAssignment> GetOedRoleAssignments(CloudEvent daEvent)
     {
-        if (daEvent.AlternativeSubject == null)
+        if (daEvent.Subject == null)
         {
-            throw new ArgumentNullException(nameof(daEvent.AlternativeSubject));
+            throw new ArgumentNullException(nameof(daEvent.Subject));
         }
 
-        var alternativeSubject = daEvent.AlternativeSubject.Split('/');
-        if (alternativeSubject.Length != 2 || alternativeSubject[0] != "person" || !Utils.IsValidSsn(alternativeSubject[1]))
+        var subject = daEvent.Subject.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (subject.Length != 2 || subject[0] != "person" || !Utils.IsValidSsn(subject[1]))
         {
-            throw new ArgumentException(nameof(daEvent.AlternativeSubject));
+            throw new ArgumentException(nameof(daEvent.Subject) + " must be SSN with '/person/' prefix");
         }
 
-        var estateSsn = alternativeSubject[1];
+        var estateSsn = subject[1];
 
         if (daEvent.Data == null)
         {
@@ -53,8 +53,13 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             "formuesfullmakt"                       => "urn:digitaltdodsbo:formuesfullmakt",
             "kandidatarving_partnerEllerEktefelle"  => "urn:digitaltdodsbo:arving:partnerEllerEktefelle",
             "kandidatarving_barn"                   => "urn:digitaltdodsbo:arving:barn",
+            "kandidatarving_barnebarn"              => "urn:digitaltdodsbo:arving:barnebarn",
             "kandidatarving_mor"                    => "urn:digitaltdodsbo:arving:mor",
             "kandidatarving_far"                    => "urn:digitaltdodsbo:arving:far",
+            "kandidatarving_onkel"                  => "urn:digitaltdodsbo:arving:onkel",
+            "kandidatarving_tante"                  => "urn:digitaltdodsbo:arving:tante",
+            "kandidatarving_soskenbarn"             => "urn:digitaltdodsbo:arving:soskenbarn",
+            "kandidatarving_besteforelder"          => "urn:digitaltdodsbo:arving:besteforelder",
             _ => throw new ArgumentOutOfRangeException(nameof(eventRoleAssignment.RoleCode))
         };
 
@@ -63,12 +68,31 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             throw new ArgumentException(nameof(eventRoleAssignment.Recipient));
         }
 
-        return new OedRoleAssignment
+        var now = DateTimeOffset.UtcNow;
+
+        var roleAssignments = new List<OedRoleAssignment>
         {
-            EstateSsn = estateSsn,
-            RecipientSsn = eventRoleAssignment.Recipient,
-            RoleCode = roleCode,
-            Created = DateTimeOffset.UtcNow
+            new()
+            {
+                EstateSsn = estateSsn,
+                RecipientSsn = eventRoleAssignment.Recipient,
+                RoleCode = roleCode,
+                Created = now
+            }
         };
+
+        // Include base "arving" role 
+        if (roleCode.Contains(":arving:"))
+        {
+            roleAssignments.Add(new()
+            {
+                EstateSsn = estateSsn,
+                RecipientSsn = eventRoleAssignment.Recipient,
+                RoleCode = "urn:digitaltdodsbo:arving",
+                Created = now
+            });
+        }
+
+        return roleAssignments;
     }
 }

@@ -13,17 +13,17 @@ public class PolicyInformationPointService : IPolicyInformationPointService
 
     public async Task<List<PipRoleAssignment>> HandlePipRequest(PipRequest pipRequest)
     {
-        if (!Utils.IsValidSsn(pipRequest.CoveredBy))
+        if (!Utils.IsValidSsn(pipRequest.To))
         {
-            throw new ArgumentException(nameof(pipRequest.CoveredBy));
+            throw new ArgumentException(nameof(pipRequest.To));
         }
 
-        if (!Utils.IsValidSsn(pipRequest.OfferedBy))
+        if (!Utils.IsValidSsn(pipRequest.From))
         {
-            throw new ArgumentException(nameof(pipRequest.OfferedBy));
+            throw new ArgumentException(nameof(pipRequest.From));
         }
 
-        var results = await _oedRoleRepositoryService.GetRoleAssignmentsForUser(pipRequest.CoveredBy, pipRequest.OfferedBy);
+        var results = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.To, pipRequest.From);
 
         var pipResponse = new List<PipRoleAssignment>();
         foreach (var result in results)
