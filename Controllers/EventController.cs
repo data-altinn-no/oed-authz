@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using oed_authz.Interfaces;
 using oed_authz.Models;
+using oed_authz.Settings;
 
 namespace oed_authz.Controllers;
 
@@ -17,6 +19,7 @@ public class EventController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = Constants.AuthenticationPolicyForPlatformEvents)]
     public async Task<IActionResult> Index([FromBody] CloudEventRequestModel daEvent)
     {
         try

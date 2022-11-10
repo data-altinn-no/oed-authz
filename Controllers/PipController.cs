@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using oed_authz.Interfaces;
 using oed_authz.Models;
+using oed_authz.Settings;
 
 namespace oed_authz.Controllers;
 
@@ -16,6 +18,7 @@ public class PipController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = Constants.AuthenticationPolicyForPlatformAuthorization)]
     public async Task<ActionResult<PipResponse>> Index([FromBody] PipRequest pipRequest)
     {
         try
