@@ -14,20 +14,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
     public async Task HandleDaEvent(CloudEvent daEvent)
     {
-        switch (daEvent.Type)
+        if (daEvent.Type == "no.altinn.events.digitalt-dodsbo.v1.heir-roles-updated")
         {
-            case "roleAssignment":
-                foreach (var roleAssignment in GetOedRoleAssignments(daEvent)) await _oedRoleRepositoryService.AddRoleAssignment(roleAssignment);
-                break;
-            case "roleRevocation":
-                foreach (var roleAssignment in GetOedRoleAssignments(daEvent)) await _oedRoleRepositoryService.RemoveRoleAssignment(roleAssignment);
-                break;
-            case "estateInstanceCreatedOrUpdated":
-                await HandleEstateInstanceCreatedOrUpdated(daEvent);
-                break;
-            default: 
-                // Ignore all other event types
-                return;
+            await HandleEstateInstanceCreatedOrUpdated(daEvent);    
         }
     }
 
@@ -39,39 +28,50 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
         }
         var updatedRoleAssignments = JsonSerializer.Deserialize<List<EventRoleAssignmentData>>(daEvent.Data.ToString()!)!;
-        
+
+        if (updatedRoleAssignments.Count == 0)
+        {
+            throw new InvalidOperationException(nameof(daEvent.Data));
+        }
         // Get all current roles given from this estate
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
         var currentRoleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(estateSsn);
-        var now = DateTimeOffset.UtcNow;
 
+        
         // Find assignments in updated list but not in current list to add
         var assignmentsToAdd = new List<OedRoleAssignment>();
         foreach (var updatedRoleAssignment in updatedRoleAssignments)
         {
-            if (!Utils.IsValidSsn(updatedRoleAssignment.Recipient))
+            if (!Utils.IsValidSsn(updatedRoleAssignment.Nin))
             {
-                throw new ArgumentException(nameof(updatedRoleAssignment.Recipient));
+                throw new ArgumentException(nameof(updatedRoleAssignment.Nin));
             }
 
-            if (!currentRoleAssignments.Exists(x => x.Recipient == updatedRoleAssignment.Recipient && x.RoleCode == GetPipRoleCode(updatedRoleAssignment.RoleCode)))
+            // Check if we have any current role assigments that are newer than this. If so, this means we're handling
+            // an out-of-order and outdated event so we just bail.
+            if (currentRoleAssignments.Any(x => x.Created >= daEvent.Time))
+            {
+                return;
+            }
+
+            if (!currentRoleAssignments.Exists(x => x.Recipient == updatedRoleAssignment.Nin && x.RoleCode == updatedRoleAssignment.Role))
             {
                 assignmentsToAdd.Add(new OedRoleAssignment
                 {
                     EstateSsn = estateSsn,
-                    Recipient = updatedRoleAssignment.Recipient,
-                    RoleCode = GetPipRoleCode(updatedRoleAssignment.RoleCode),
-                    Created = now
+                    Recipient = updatedRoleAssignment.Nin,
+                    RoleCode = updatedRoleAssignment.Role,
+                    Created = daEvent.Time
                 });
             }
         }
 
-        // Find assignments not in updated list but in current list to remove
+        // Find assignments in current list that's not in the updated list. These should be removed.
         var assignmentsToRemove = new List<OedRoleAssignment>();
         foreach (var currentRoleAssignment in currentRoleAssignments)
         {
             if (!updatedRoleAssignments.Exists(x =>
-                    x.Recipient == currentRoleAssignment.Recipient && GetPipRoleCode(x.RoleCode) == currentRoleAssignment.RoleCode))
+                    x.Nin == currentRoleAssignment.Recipient && x.Role == currentRoleAssignment.RoleCode))
             {
                 assignmentsToRemove.Add(new OedRoleAssignment
                 {
@@ -91,55 +91,5 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         {
             await _oedRoleRepositoryService.RemoveRoleAssignment(roleAssignment);
         }
-    }
-
-    private List<OedRoleAssignment> GetOedRoleAssignments(CloudEvent daEvent)
-    {
-        var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
-
-        if (daEvent.Data == null)
-        {
-            throw new ArgumentNullException(nameof(daEvent.Data));
-        }
-
-        var eventRoleAssignment = JsonSerializer.Deserialize<EventRoleAssignmentData>(daEvent.Data.ToString()!)!;
-
-        if (!Utils.IsValidSsn(eventRoleAssignment.Recipient))
-        {
-            throw new ArgumentException(nameof(eventRoleAssignment.Recipient));
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        var roleCode = GetPipRoleCode(eventRoleAssignment.RoleCode);
-        var roleAssignments = new List<OedRoleAssignment>
-        {
-            new()
-            {
-                EstateSsn = estateSsn,
-                Recipient = eventRoleAssignment.Recipient,
-                RoleCode = roleCode,
-                Created = now
-            }
-        };
-
-        return roleAssignments;
-    }
-
-    private string GetPipRoleCode(string roleCode)
-    {
-        return roleCode switch
-        {
-            "formuesfullmakt"                      => "urn:digitaltdodsbo:formuesfullmakt",
-            "kandidatarving_ektefelleEllerPartner" => "urn:digitaltdodsbo:arving:ektefelleEllerPartner",
-            "kandidatarving_barn"                  => "urn:digitaltdodsbo:arving:barn",
-            "kandidatarving_barnebarn"             => "urn:digitaltdodsbo:arving:barnebarn",
-            "kandidatarving_mor"                   => "urn:digitaltdodsbo:arving:mor",
-            "kandidatarving_far"                   => "urn:digitaltdodsbo:arving:far",
-            "kandidatarving_onkel"                 => "urn:digitaltdodsbo:arving:onkel",
-            "kandidatarving_tante"                 => "urn:digitaltdodsbo:arving:tante",
-            "kandidatarving_soskenbarn"            => "urn:digitaltdodsbo:arving:soskenbarn",
-            "kandidatarving_besteforelder"         => "urn:digitaltdodsbo:arving:besteforelder",
-            _ => throw new ArgumentOutOfRangeException(nameof(roleCode))
-        };
     }
 }

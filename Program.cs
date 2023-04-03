@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using oed_authz.Interfaces;
@@ -63,6 +64,15 @@ if (builder.Environment.IsDevelopment())
     IdentityModelEventSource.ShowPII = true;
     builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 }
+
+builder.WebHost.ConfigureKestrel((context, options) =>
+{
+    options.ListenAnyIP(443, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
+        listenOptions.UseHttps();
+    });
+});
 
 var app = builder.Build();
 

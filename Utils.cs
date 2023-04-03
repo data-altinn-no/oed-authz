@@ -25,8 +25,13 @@ public static class Utils
             throw new ArgumentNullException(nameof(daEvent.Subject));
         }
 
+        if (IsValidSsn(daEvent.Subject))
+        {
+            return daEvent.Subject;
+        }
+        
         var subject = daEvent.Subject.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (subject.Length != 2 || subject[0] != "person" || !IsValidSsn(subject[1]))
+        if (subject is not ["person", _] || !IsValidSsn(subject[1]))
         {
             throw new ArgumentException(nameof(daEvent.Subject) + " must be SSN with '/person/' prefix");
         }
