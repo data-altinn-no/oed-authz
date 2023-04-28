@@ -2,8 +2,8 @@
 
 public class ExternalAuthorizationResponse
 {
-    public string Deceased { get; set; } = null!;
-    public string Heir { get; set; } = null!;
+    public string EstateSsn { get; set; } = null!;
+    public string RecipientSsn { get; set; } = null!;
     public List<ExternalRoleAssignment> RoleAssignments { get; set; } = new();
 }
 

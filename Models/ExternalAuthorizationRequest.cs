@@ -5,7 +5,7 @@ namespace oed_authz.Models;
 public class ExternalAuthorizationRequest
 {
     [Required]
-    public string Deceased { get; set; } = null!;
+    public string EstateSsn { get; set; } = null!;
     [Required]
-    public string Heir { get; set; } = null!;
+    public string RecipientSsn { get; set; } = null!;
 }

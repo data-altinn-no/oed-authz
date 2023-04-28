@@ -11,30 +11,48 @@ public class PolicyInformationPointService : IPolicyInformationPointService
         _oedRoleRepositoryService = oedRoleRepositoryService;
     }
 
-    public async Task<List<PipRoleAssignment>> HandlePipRequest(PipRequest pipRequest)
+    public async Task<PipResponse> HandlePipRequest(PipRequest pipRequest)
     {
-        if (!Utils.IsValidSsn(pipRequest.To))
+        if (pipRequest.To is not null && !Utils.IsValidSsn(pipRequest.To))
         {
             throw new ArgumentException(nameof(pipRequest.To));
         }
 
-        if (!Utils.IsValidSsn(pipRequest.From))
+        if (pipRequest.From is not null && !Utils.IsValidSsn(pipRequest.From))
         {
             throw new ArgumentException(nameof(pipRequest.From));
         }
 
-        var results = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.To, pipRequest.From);
-
-        var pipResponse = new List<PipRoleAssignment>();
-        foreach (var result in results)
+        List<OedRoleAssignment> roleAssignments;
+        if (pipRequest.To is not null && pipRequest.From is not null)
         {
-            pipResponse.Add(new PipRoleAssignment
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.To, pipRequest.From);
+        }
+        else if (pipRequest.To is not null)
+        {
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.To);
+        }
+        else if (pipRequest.From is not null)
+        {
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(pipRequest.From);
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(pipRequest), "Both recipientSsn and estateSsn cannot be null");
+        }
+
+        var pipRoleAssignments = new List<PipRoleAssignment>();
+        foreach (var result in roleAssignments)
+        {
+            pipRoleAssignments.Add(new PipRoleAssignment
             {
                 RoleCode = result.RoleCode,
-                Created = result.Created
+                Created = result.Created,
+                From = result.EstateSsn,
+                To = result.Recipient
             });
         }
 
-        return pipResponse;
+        return new PipResponse { RoleAssignments = pipRoleAssignments };
     }
 }

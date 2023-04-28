@@ -6,8 +6,9 @@ using oed_authz.Settings;
 
 namespace oed_authz.Controllers;
 
-[Route("api/pip")]
+
 [ApiController]
+[Route("api/pip")]
 public class PipController : Controller
 {
     private readonly IPolicyInformationPointService _pipService;
@@ -19,7 +20,7 @@ public class PipController : Controller
 
     [HttpPost]
     [Authorize(Policy = Constants.AuthorizationPolicyForPlatformAuthorization)]
-    public async Task<ActionResult<List<PipRoleAssignment>>> Index([FromBody] PipRequest pipRequest)
+    public async Task<ActionResult<PipResponse>> Index([FromBody] PipRequest pipRequest)
     {
         try
         {
