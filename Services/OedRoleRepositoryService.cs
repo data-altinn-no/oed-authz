@@ -10,9 +10,9 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
     private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
     private NpgsqlDataSource? _dataSource;
 
-    public OedRoleRepositoryService(IOptions<ConnectionStrings> connectionStrings)
+    public OedRoleRepositoryService(IOptions<Secrets> connectionStrings)
     {
-        _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStrings.Value.PostgreSql);
+        _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStrings.Value.PostgreSqlUserConnectionString);
     }
 
     ~OedRoleRepositoryService()
@@ -53,7 +53,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
     {
         _dataSource ??= _dataSourceBuilder.Build();
 
-        var baseSql = "SELECT \"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\" FROM oedauthz.roleassignments";
+        const string baseSql = "SELECT \"estateSsn\", \"recipientSsn\", \"roleCode\", \"created\" FROM oedauthz.roleassignments";
 
         NpgsqlCommand cmd;
 

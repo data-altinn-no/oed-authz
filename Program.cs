@@ -1,60 +1,106 @@
 using System.Reflection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using oed_authz.EventAuthorization;
+using oed_authz.Helpers;
 using oed_authz.Interfaces;
 using oed_authz.Services;
 using oed_authz.Settings;
+using Yuniql.AspNetCore;
+using Yuniql.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection(Constants.ConfigurationSectionConnectionStrings));
+builder.Services.Configure<Secrets>(builder.Configuration.GetSection(Constants.ConfigurationSectionSecrets));
 builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings));
 
 builder.Services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
 builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
 builder.Services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
+builder.Services.AddScoped<IAuthorizationHandler, InternalOedEventAuthHandler>();
 
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddProblemDetails();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    options.MetadataAddress =
-        builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
-            nameof(GeneralSettings.Oauth2WellKnownEndpoint)]!;
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(options =>
     {
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        RequireExpirationTime = true,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-});
+        options.DefaultScheme = Constants.AuthenticationSchemeInternal;
+    })
+    // Add support for the Oauth2 with Altinn as issuer for internal requests
+    .AddJwtBearer(Constants.AuthenticationSchemeInternal, options =>
+    {
+        options.MetadataAddress =
+            builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
+                nameof(GeneralSettings.AltinnOauth2WellKnownEndpoint)]!;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    })
+    // Add support for Oauth2 with Maskinporten as issuer for external requests
+    .AddJwtBearer(Constants.AuthenticationSchemeExternal, options =>
+    {
+        options.MetadataAddress =
+            builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
+                nameof(GeneralSettings.MaskinportenOauth2WellKnownEndpoint)]!;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(Constants.AuthenticationPolicyForPlatformAuthorization, configurePolicy =>
+    // Token/claim-based policy for internal requests to the PIP api
+    options.AddPolicy(Constants.AuthorizationPolicyForPlatformAuthorization, configurePolicy =>
     {
         configurePolicy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-            .RequireClaim(Constants.AuthenticationClaimTypeApp, Constants.AppPlatformAuthorization)
+            .AddAuthenticationSchemes(Constants.AuthenticationSchemeInternal)
+            .RequireClaim(Constants.TokenClaimTypeApp, Constants.AppPlatformAuthorization)
             .Build();
     });
 
-    options.AddPolicy(Constants.AuthenticationPolicyForPlatformEvents, configurePolicy =>
+    // Secret-in-header based policy for internal requests to the events endpoint (sent from oed-inbound)
+    options.AddPolicy(Constants.AuthorizationPolicyForEvents, configurePolicy =>
+    {
+        configurePolicy.Requirements.Add(new InternalOedEventAuthRequirement());
+        configurePolicy.Build();
+    });
+
+    // Maskinporten scope requirements for external requests for probate roles only
+    options.AddPolicy(Constants.AuthorizationPolicyForExternalsProbateOnly, configurePolicy =>
     {
         configurePolicy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-            .RequireClaim(Constants.AuthenticationClaimTypeApp, Constants.AppPlatformEvents)
+            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
+            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeProbateOnly)
+            .Build();
+    });
+
+    // Maskinporten scope requirements for external requests for all roles
+    options.AddPolicy(Constants.AuthorizationPolicyForExternalsAllRoles, configurePolicy =>
+    {
+        configurePolicy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
+            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeAllRoles)
             .Build();
     });
 });
@@ -65,7 +111,7 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 }
 
-builder.WebHost.ConfigureKestrel((context, options) =>
+builder.WebHost.ConfigureKestrel((_, options) =>
 {
     options.ListenAnyIP(443, listenOptions =>
     {
@@ -88,12 +134,22 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
-
-// TODO Ensure subscription is active upon app start 
 app.MapControllers();
+
+var traceService = new ConsoleTraceService { IsDebugEnabled = true };
+app.UseYuniql(
+    new PostgreSqlDataService(traceService),
+    new PostgreSqlBulkImportService(traceService),
+    traceService,
+    new Configuration
+    {
+        Workspace = Path.Combine(Environment.CurrentDirectory, "Migrations"),
+        ConnectionString = builder.Configuration.GetSection(Constants.ConfigurationSectionSecrets)[
+            nameof(Secrets.PostgreSqlAdminConnectionString)]!,
+        IsAutoCreateDatabase = false,
+        IsDebug = true
+    });
 
 app.Run();

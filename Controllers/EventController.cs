@@ -18,8 +18,13 @@ public class EventController : Controller
         _altinnEventHandlerService = altinnEventHandlerService;
     }
 
+    /// <summary>
+    /// This is the endpoint that Altinn will call when it wants to send us an event.
+    /// </summary>
+    /// <param name="daEvent"></param>
+    /// <returns></returns>
     [HttpPost]
-    [Authorize(Policy = Constants.AuthenticationPolicyForPlatformEvents)]
+    [Authorize(Policy = Constants.AuthorizationPolicyForEvents)]
     public async Task<IActionResult> Index([FromBody] CloudEvent daEvent)
     {
         try

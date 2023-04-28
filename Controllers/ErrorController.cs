@@ -37,9 +37,8 @@ public class ErrorController : ControllerBase
         var exceptionHandlerFeature =
             HttpContext.Features.Get<IExceptionHandlerFeature>()!;
 
-        _logger.LogError("Error occured in oed_authz: {type}: {message}", exceptionHandlerFeature.Error.GetType().Name, exceptionHandlerFeature.Error.Message);
+        _logger.LogError("Error occured in oed_authz: {Type}: {Message}", exceptionHandlerFeature.Error.GetType().Name, exceptionHandlerFeature.Error.Message);
 
         return Problem();
     }
-        
 }

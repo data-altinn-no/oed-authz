@@ -30,7 +30,8 @@ public class PolicyInformationPointService : IPolicyInformationPointService
         {
             pipResponse.Add(new PipRoleAssignment
             {
-                RoleCode = result.RoleCode
+                RoleCode = result.RoleCode,
+                Created = result.Created
             });
         }
 

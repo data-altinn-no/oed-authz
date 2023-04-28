@@ -2,5 +2,7 @@
 
 public class GeneralSettings
 {
-    public string Oauth2WellKnownEndpoint { get; set; } = null!;
+    public string AltinnOauth2WellKnownEndpoint { get; set; } = null!;
+    public string MaskinportenOauth2WellKnownEndpoint { get; set; } = null!;
+    public string OedEventAuthHeader { get; set; } = null!;
 }
