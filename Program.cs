@@ -111,6 +111,7 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 }
 
+/*
 builder.WebHost.ConfigureKestrel((_, options) =>
 {
     options.ListenAnyIP(443, listenOptions =>
@@ -119,6 +120,7 @@ builder.WebHost.ConfigureKestrel((_, options) =>
         listenOptions.UseHttps();
     });
 });
+*/
 
 var app = builder.Build();
 
