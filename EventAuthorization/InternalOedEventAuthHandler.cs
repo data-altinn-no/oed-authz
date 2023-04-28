@@ -21,9 +21,9 @@ public class InternalOedEventAuthHandler : AuthorizationHandler<InternalOedEvent
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        if (httpContext is not null && httpContext.Request.Headers.TryGetValue(_settings.OedEventAuthHeader, out var headerValue))
+        if (httpContext is not null && httpContext.Request.Query.TryGetValue(_settings.OedEventAuthQueryParameter, out var queryValue))
         {
-            if (headerValue == _secrets.OedEventAuthKey)
+            if (queryValue == _secrets.OedEventAuthKey)
             {
                 context.Succeed(requirement);
             }
