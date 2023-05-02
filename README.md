@@ -12,7 +12,7 @@ External consumers should use `/api/v1/authorization/roles`. This endpoint requi
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body must be a JSON object with `estateSsn` and `recipientSsn` properties, both being 11-digit norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
 
-```json
+```jsonc
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles
 {
     "estateSsn": "11111111111",
