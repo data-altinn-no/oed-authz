@@ -1,7 +1,7 @@
 # oed-auzth
 ASP.NET Core Web API handling events for OED/DD roles, persisting them and providing av PIP API for Altinn Authorization. This also exposes an API for external consumers requiring Maskinporten-authentication.
 
-See https://oed-test-authz-app.azurewebsites.net/api/swagger for API documentation.
+See https://oed-test-authz-app.azurewebsites.net/swagger/ for API documentation.
 
 
 ## Using the API for external consumers (banks etc.)
