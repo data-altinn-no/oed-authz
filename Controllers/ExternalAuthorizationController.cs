@@ -7,7 +7,7 @@ using oed_authz.Settings;
 namespace oed_authz.Controllers;
 
 [ApiController]
-[Route("api/authorization")]
+[Route("api/v1/authorization")]
 public class ExternalAuthorizationController : Controller
 {
     private readonly IPolicyInformationPointService _pipService;
@@ -18,22 +18,36 @@ public class ExternalAuthorizationController : Controller
     }
 
     [HttpPost]
-    [Route("probate")]
-    [Authorize(Policy = Constants.AuthorizationPolicyForExternalsProbateOnly)]
-    public async Task<ActionResult<ExternalAuthorizationResponse>> ProbateOnly([FromBody] ExternalAuthorizationRequest externalAuthorizationRequest)
-    {
-        return await HandleRequest(externalAuthorizationRequest, true);
-    }
-
-    [HttpPost]
     [Route("roles")]
-    [Authorize(Policy = Constants.AuthorizationPolicyForExternalsAllRoles)]
-    public async Task<ActionResult<ExternalAuthorizationResponse>> AllRoles([FromBody] ExternalAuthorizationRequest externalAuthorizationRequest)
+    [Authorize(Policy = Constants.AuthorizationPolicyForExternals)]
+    public async Task<ActionResult<ExternalAuthorizationResponse>> GetRoles([FromBody] ExternalAuthorizationRequest externalAuthorizationRequest)
     {
-        return await HandleRequest(externalAuthorizationRequest, false);
+        try
+        {
+            return Ok(await HandleRequest(externalAuthorizationRequest, !HasAllRolesScope()));
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(
+                title: "Bad Input",
+                detail: ex.GetType().Name + ": " + ex.Message,
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
     }
 
-    private async Task<ActionResult<ExternalAuthorizationResponse>> HandleRequest(ExternalAuthorizationRequest externalAuthorizationRequest, bool probateOnly)
+    private bool HasAllRolesScope()
+    {
+        var scopeClaim = User.Claims.FirstOrDefault(x => x.Type.Equals("scope", StringComparison.OrdinalIgnoreCase));
+        if (scopeClaim == null)
+        {
+            throw new ArgumentException("Missing scope claim");
+        }
+
+        return scopeClaim.Value.Contains(Constants.ScopeAllRoles);
+    }
+
+    private async Task<ExternalAuthorizationResponse> HandleRequest(ExternalAuthorizationRequest externalAuthorizationRequest, bool probateOnly)
     {
         var pipRequest = new PipRequest
         {
@@ -59,6 +73,6 @@ public class ExternalAuthorizationController : Controller
             RoleAssignments = externalRoleAssignments
         };
 
-        return Ok(externalAuthorizationResponse);
+        return externalAuthorizationResponse;
     }
 }

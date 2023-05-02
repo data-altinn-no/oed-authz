@@ -84,23 +84,13 @@ builder.Services.AddAuthorization(options =>
         configurePolicy.Build();
     });
 
-    // Maskinporten scope requirements for external requests for probate roles only
-    options.AddPolicy(Constants.AuthorizationPolicyForExternalsProbateOnly, configurePolicy =>
+    // Maskinporten scope requirements for external requests.
+    options.AddPolicy(Constants.AuthorizationPolicyForExternals, configurePolicy =>
     {
         configurePolicy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
-            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeProbateOnly)
-            .Build();
-    });
-
-    // Maskinporten scope requirements for external requests for all roles
-    options.AddPolicy(Constants.AuthorizationPolicyForExternalsAllRoles, configurePolicy =>
-    {
-        configurePolicy
-            .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
-            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeAllRoles)
+            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeProbateOnly, Constants.ScopeAllRoles)
             .Build();
     });
 });
@@ -111,27 +101,12 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 }
 
-builder.WebHost.ConfigureKestrel((_, options) =>
-{
-    options.ListenAnyIP(443, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
-        listenOptions.UseHttps();
-    });
-});
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseExceptionHandler("/error-development");
-}
-else
-{
-    app.UseExceptionHandler("/error");
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseExceptionHandler(app.Environment.IsDevelopment() ? "/error-development" : "/error");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

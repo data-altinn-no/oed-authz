@@ -38,30 +38,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create the triggers
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'roleassignments_insert_log') THEN
-        CREATE TRIGGER roleassignments_insert_log
-        AFTER INSERT ON oedauthz.roleassignments
-        FOR EACH ROW
-        EXECUTE FUNCTION oedauthz.log_roleassignments_changes();
-    END IF;
-END
-$$;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'roleassignments_delete_log') THEN
-        CREATE TRIGGER roleassignments_delete_log
-        AFTER DELETE ON oedauthz.roleassignments
-        FOR EACH ROW
-        EXECUTE FUNCTION oedauthz.log_roleassignments_changes();
-    END IF;
-END
-$$;
-
-
 -- Create indices for estateSsn, recipientSsn, and timestamp
 CREATE INDEX IF NOT EXISTS idx_roleassignments_log_estateSsn ON oedauthz.roleassignments_log ("estateSsn");
 CREATE INDEX IF NOT EXISTS idx_roleassignments_log_recipientSsn ON oedauthz.roleassignments_log ("recipientSsn");

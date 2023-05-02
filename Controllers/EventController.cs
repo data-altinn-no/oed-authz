@@ -7,7 +7,7 @@ using oed_authz.Settings;
 
 namespace oed_authz.Controllers;
 
-[Route("api/eventhandler")]
+[Route("api/v1/eventhandler")]
 [ApiController]
 public class EventController : Controller
 {
@@ -25,7 +25,7 @@ public class EventController : Controller
     /// <returns></returns>
     [HttpPost]
     [Authorize(Policy = Constants.AuthorizationPolicyForEvents)]
-    public async Task<IActionResult> Index([FromBody] CloudEvent daEvent)
+    public async Task<IActionResult> HandleCloudEvent([FromBody] CloudEvent daEvent)
     {
         try
         {

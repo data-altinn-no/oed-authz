@@ -10,10 +10,7 @@ public static class Constants
 
     public const string AuthorizationPolicyForPlatformAuthorization = "PlatformAuthorization";
     public const string AuthorizationPolicyForEvents = "PlatformEvents";
-    public const string AuthorizationPolicyForExternalsProbateOnly = "ExternalsProbateOnly";
-    public const string AuthorizationPolicyForExternalsAllRoles = "ExternalsAllRoles";
-
-    public const string InternalOedAuthHeaderName = "X-Internal-Oed-Event-Auth";
+    public const string AuthorizationPolicyForExternals = "Externals";
 
     public const string TokenClaimTypeApp = "urn:altinn:app";
     public const string TokenClaimTypeScope = "scope";
