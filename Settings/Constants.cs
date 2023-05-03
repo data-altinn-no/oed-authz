@@ -9,6 +9,7 @@ public static class Constants
     public const string AuthenticationSchemeExternal = "Maskinporten";
 
     public const string AuthorizationPolicyForPlatformAuthorization = "PlatformAuthorization";
+    public const string AuthorizationPolicyForDdApp = "DdApp";
     public const string AuthorizationPolicyForEvents = "PlatformEvents";
     public const string AuthorizationPolicyForExternals = "Externals";
 
@@ -17,8 +18,10 @@ public static class Constants
 
     public const string AppPlatformAuthorization = "platform.authorization";
 
+    public const string ScopeInternal = "altinn:dd:internal";
     public const string ScopeProbateOnly = "altinn:dd:authlookup:probateonly";
     public const string ScopeAllRoles = "altinn:dd:authlookup:allroles";
+
     public const string ProbateRoleCode = "urn:digitaltdodsbo:skifteattest";
 }
 

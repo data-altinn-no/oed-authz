@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace oed_authz.EventAuthorization;
+namespace oed_authz.Authorization;
 
 public class InternalOedEventAuthRequirement : IAuthorizationRequirement
 {

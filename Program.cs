@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using oed_authz.EventAuthorization;
+using oed_authz.Authorization;
 using oed_authz.Helpers;
 using oed_authz.Interfaces;
 using oed_authz.Services;
@@ -59,15 +59,15 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             ValidateIssuer = false,
             ValidateAudience = false,
-            RequireExpirationTime = true,
-            ValidateLifetime = true,
+            RequireExpirationTime = false,
+            ValidateLifetime = false,
             ClockSkew = TimeSpan.Zero
         };
     });
 
 builder.Services.AddAuthorization(options =>
 {
-    // Token/claim-based policy for internal requests to the PIP api
+    // Token/claim-based policy for platform requests to the PIP api
     options.AddPolicy(Constants.AuthorizationPolicyForPlatformAuthorization, configurePolicy =>
     {
         configurePolicy
@@ -91,6 +91,16 @@ builder.Services.AddAuthorization(options =>
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
             .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeProbateOnly, Constants.ScopeAllRoles)
+            .Build();
+    });
+
+    // Maskinporten scope requirements for internal DD apps.
+    options.AddPolicy(Constants.AuthorizationPolicyForDdApp, configurePolicy =>
+    {
+        configurePolicy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
+            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeInternal)
             .Build();
     });
 });

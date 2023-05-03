@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using oed_authz.Settings;
 
-namespace oed_authz.EventAuthorization;
+namespace oed_authz.Authorization;
 
 public class InternalOedEventAuthHandler : AuthorizationHandler<InternalOedEventAuthRequirement>
 {
