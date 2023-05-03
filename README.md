@@ -36,9 +36,19 @@ Response:
 
 If no relation (ie. role assignement) exists, an empty `roleAssignments` array will be returned.
 
-## Internal usage
+## Internal usage 
 
-Internal (platform and DD application) consumers should use the `/api/v1/pip` endpoint. This requires a platform-token where the `urn:altinn:app` claim is set to `platform.authorization`. Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
+Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
+
+There are two functionally equivalent endpoints with different auth policies:
+
+### Platform auth
+
+Platform consumers should use the `/api/v1/pip/platform` endpoint. This requires a platform-token where the `urn:altinn:app` claim is set to `platform.authorization`. 
+
+### App auth
+
+Internal app consumers (ie. DD master app) should use the `/api/v1/pip/app` endpoint. This requires a Maskinporten-token with the scope `altinn:dd:internal`
 
 
 ## Local development setup
