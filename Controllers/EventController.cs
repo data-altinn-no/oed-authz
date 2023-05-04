@@ -21,15 +21,15 @@ public class EventController : Controller
     /// <summary>
     /// This is the endpoint that Altinn will call when it wants to send us an event.
     /// </summary>
-    /// <param name="daEvent"></param>
+    /// <param name="cloudEvent"></param>
     /// <returns></returns>
     [HttpPost]
     [Authorize(Policy = Constants.AuthorizationPolicyForEvents)]
-    public async Task<IActionResult> HandleCloudEvent([FromBody] CloudEvent daEvent)
+    public async Task<IActionResult> HandleCloudEvent([FromBody] CloudEvent cloudEvent)
     {
         try
         {
-            await _altinnEventHandlerService.HandleDaEvent(daEvent);
+            await _altinnEventHandlerService.HandleEvent(cloudEvent);
         }
         catch (ArgumentException ex)
         {

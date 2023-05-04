@@ -12,11 +12,17 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         _oedRoleRepositoryService = oedRoleRepositoryService;
     }
 
-    public async Task HandleDaEvent(CloudEvent daEvent)
+    public async Task HandleEvent(CloudEvent cloudEvent)
     {
-        if (daEvent.Type == "no.altinn.events.digitalt-dodsbo.v1.heir-roles-updated")
+        switch (cloudEvent.Type)
         {
-            await HandleEstateInstanceCreatedOrUpdated(daEvent);    
+            case "no.altinn.events.digitalt-dodsbo.v1.heir-roles-updated":
+                await HandleEstateInstanceCreatedOrUpdated(cloudEvent);
+                break;
+            case "platform.events.validatesubscription":
+                return;
+            default:
+                throw new ArgumentException("Unknown event type");
         }
     }
 

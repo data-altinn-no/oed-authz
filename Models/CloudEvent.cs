@@ -33,8 +33,7 @@ public class CloudEvent
     /// Gets or sets the service resource of the event defining authorization.
     /// </summary>
     [JsonPropertyName("resource")]
-    [Required]
-    public string Resource { get; set; } = null!;
+    public string? Resource { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the service resource instance of the event defining authorization.
@@ -46,7 +45,6 @@ public class CloudEvent
     /// Gets or sets the subject of the event.
     /// </summary>
     [JsonPropertyName("subject"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    [Required]
     public string? Subject { get; set; } = null;
 
     /// <summary>
