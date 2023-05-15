@@ -38,14 +38,14 @@ If no relation (ie. role assignement) exists, an empty `roleAssignments` array w
 
 ## Internal usage 
 
-Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively. One of the parameters can be omitted to get a list of all relations for the given from/to.
+Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively to the endpoint `/api/v1/pip`. One of the parameters can be omitted to get a list of all relations for the given from/to.
 
 This requires a Maskinporten-token with the scope `altinn:dd:internal`
 
 ### Example
 
 ```jsonc
-// POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles
+// POST https://oed-test-authz-app.azurewebsites.net/api/v1/pip
 {
     "from": "11111111111"
     // "to" is omitted
