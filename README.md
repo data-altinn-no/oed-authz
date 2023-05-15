@@ -38,17 +38,45 @@ If no relation (ie. role assignement) exists, an empty `roleAssignments` array w
 
 ## Internal usage 
 
-Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
+Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively. One of the parameters can be omitted to get a list of all relations for the given from/to.
 
-There are two functionally equivalent endpoints with different auth policies:
+This requires a Maskinporten-token with the scope `altinn:dd:internal`
 
-### Platform auth
+### Example
 
-Platform consumers should use the `/api/v1/pip/platform` endpoint. This requires a platform-token where the `urn:altinn:app` claim is set to `platform.authorization`. 
+```jsonc
+// POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles
+{
+    "from": "11111111111"
+    // "to" is omitted
+}
+```
 
-### App auth
-
-Internal app consumers (ie. DD master app) should use the `/api/v1/pip/app` endpoint. This requires a Maskinporten-token with the scope `altinn:dd:internal`
+Response:
+```json
+{
+    "roleAssignments": [
+        {
+            "urn:oed:rolecode": "urn:digitaltdodsbo:formuesfullmakt",
+            "from": "11111111111",
+            "to": "22222222211",
+            "created": "2023-02-20T10:00:06.401416+00:00"
+        },
+        {
+            "urn:oed:rolecode": "urn:digitaltdodsbo:arving:ektefelleEllerPartner",
+            "from": "11111111111",
+            "to": "22222222211",
+            "created": "2023-02-20T10:00:06.401416+00:00"
+        },
+        {
+            "urn:oed:rolecode": "urn:digitaltdodsbo:skifteattest",
+            "from": "11111111111",
+            "to": "22222222211",
+            "created": "2023-02-20T10:00:06.401416+00:00"
+        }
+    ]
+}
+```
 
 
 ## Local development setup

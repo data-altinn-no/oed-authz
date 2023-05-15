@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using oed_authz.Authorization;
 using oed_authz.Interfaces;
 using oed_authz.Models;
 using oed_authz.Settings;
@@ -17,18 +16,9 @@ public class PipController : Controller
     }
 
     [HttpPost]
-    [Authorize(Policy = Constants.AuthorizationPolicyForPlatformAuthorization)]
-    [Route("api/v1/pip/platform")]
-    public async Task<ActionResult<PipResponse>> HandlePlatformPipRequest([FromBody] PipRequest pipRequest)
-        => await HandlePipRequest(pipRequest);
-
-    [HttpPost]
-    [Authorize(Policy = Constants.AuthorizationPolicyForDdApp)]
-    [Route("api/v1/pip/app")]
-    public async Task<ActionResult<PipResponse>> HandleAppPipRequest([FromBody] PipRequest pipRequest)
-        => await HandlePipRequest(pipRequest);
-
-    private async Task<ActionResult<PipResponse>> HandlePipRequest(PipRequest pipRequest)
+    [Authorize(Policy = Constants.AuthorizationPolicyInternal)]
+    [Route("api/v1/pip")]
+    public async Task<ActionResult<PipResponse>> HandlePipRequest([FromBody] PipRequest pipRequest)
     {
         try
         {
@@ -43,7 +33,4 @@ public class PipController : Controller
             );
         }
     }
-
-
-
 }

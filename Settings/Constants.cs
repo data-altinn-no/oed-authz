@@ -5,18 +5,12 @@ public static class Constants
     public const string ConfigurationSectionSecrets = "Secrets";
     public const string ConfigurationSectionGeneralSettings = "GeneralSettings";
 
-    public const string AuthenticationSchemeInternal = "Altinn";
-    public const string AuthenticationSchemeExternal = "Maskinporten";
+    public const string MaskinportenAuthentication = "Maskinporten";
+    public const string MaskinportenAuxillaryAuthentication = "MaskinportenAuxillary";
 
-    public const string AuthorizationPolicyForPlatformAuthorization = "PlatformAuthorization";
-    public const string AuthorizationPolicyForDdApp = "DdApp";
-    public const string AuthorizationPolicyForEvents = "PlatformEvents";
-    public const string AuthorizationPolicyForExternals = "Externals";
-
-    public const string TokenClaimTypeApp = "urn:altinn:app";
-    public const string TokenClaimTypeScope = "scope";
-
-    public const string AppPlatformAuthorization = "platform.authorization";
+    public const string AuthorizationPolicyInternal = "Internal";
+    public const string AuthorizationPolicyForEvents = "Events";
+    public const string AuthorizationPolicyExternal = "Externals";
 
     public const string ScopeInternal = "altinn:dd:internal";
     public const string ScopeProbateOnly = "altinn:dd:authlookup:probateonly";

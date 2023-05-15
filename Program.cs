@@ -1,6 +1,5 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using oed_authz.Authorization;
@@ -22,7 +21,8 @@ builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection(Con
 builder.Services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
 builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
 builder.Services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
-builder.Services.AddScoped<IAuthorizationHandler, InternalOedEventAuthHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, QueryParamRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ScopeRequirementHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
@@ -30,30 +30,31 @@ builder.Services.AddLogging();
 builder.Services.AddProblemDetails();
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultScheme = Constants.AuthenticationSchemeInternal;
+        options.DefaultScheme = Constants.MaskinportenAuthentication;
     })
-    // Add support for the Oauth2 with Altinn as issuer for internal requests
-    .AddJwtBearer(Constants.AuthenticationSchemeInternal, options =>
+    // Add support for the Oauth2 with Maskinporten as issuer
+    .AddJwtBearer(Constants.MaskinportenAuthentication, options =>
     {
         options.MetadataAddress =
             builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
-                nameof(GeneralSettings.AltinnOauth2WellKnownEndpoint)]!;
+                nameof(GeneralSettings.MaskinportenOauth2WellKnownEndpoint)]!;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             ValidateIssuer = false,
             ValidateAudience = false,
-            RequireExpirationTime = true,
-            ValidateLifetime = true,
+            RequireExpirationTime = false,
+            ValidateLifetime = false,
             ClockSkew = TimeSpan.Zero
         };
     })
-    // Add support for Oauth2 with Maskinporten as issuer for external requests
-    .AddJwtBearer(Constants.AuthenticationSchemeExternal, options =>
+    // Add support for Oauth2 with Maskinporten as issuer (auxillary). Used to support "ver" as well as "test"
+    // in non-production environments
+    .AddJwtBearer(Constants.MaskinportenAuxillaryAuthentication, options =>
     {
         options.MetadataAddress =
             builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
-                nameof(GeneralSettings.MaskinportenOauth2WellKnownEndpoint)]!;
+                nameof(GeneralSettings.MaskinportenAuxillaryOauth2WellKnownEndpoint)]!;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
@@ -68,40 +69,34 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     // Token/claim-based policy for platform requests to the PIP api
-    options.AddPolicy(Constants.AuthorizationPolicyForPlatformAuthorization, configurePolicy =>
+    options.AddPolicy(Constants.AuthorizationPolicyInternal, configurePolicy =>
     {
         configurePolicy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(Constants.AuthenticationSchemeInternal)
-            .RequireClaim(Constants.TokenClaimTypeApp, Constants.AppPlatformAuthorization)
+            .AddAuthenticationSchemes(Constants.MaskinportenAuthentication, Constants.MaskinportenAuxillaryAuthentication)
+            .AddRequirements(new ScopeRequirement(Constants.ScopeInternal))
             .Build();
-    });
-
-    // Secret-in-header based policy for internal requests to the events endpoint (sent from oed-inbound)
-    options.AddPolicy(Constants.AuthorizationPolicyForEvents, configurePolicy =>
-    {
-        configurePolicy.Requirements.Add(new InternalOedEventAuthRequirement());
-        configurePolicy.Build();
     });
 
     // Maskinporten scope requirements for external requests.
-    options.AddPolicy(Constants.AuthorizationPolicyForExternals, configurePolicy =>
+    options.AddPolicy(Constants.AuthorizationPolicyExternal, configurePolicy =>
     {
         configurePolicy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
-            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeProbateOnly, Constants.ScopeAllRoles)
+            .AddAuthenticationSchemes(Constants.MaskinportenAuthentication, Constants.MaskinportenAuxillaryAuthentication)
+            .AddRequirements(new ScopeRequirement(new[] { Constants.ScopeProbateOnly, Constants.ScopeAllRoles }))
             .Build();
     });
 
-    // Maskinporten scope requirements for internal DD apps.
-    options.AddPolicy(Constants.AuthorizationPolicyForDdApp, configurePolicy =>
+    // Secret-in-query-param based policy for internal requests to the events endpoint (sent from oed-inbound)
+    options.AddPolicy(Constants.AuthorizationPolicyForEvents, configurePolicy =>
     {
-        configurePolicy
-            .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(Constants.AuthenticationSchemeExternal)
-            .RequireClaim(Constants.TokenClaimTypeScope, Constants.ScopeInternal)
-            .Build();
+        configurePolicy.Requirements.Add(new QueryParamRequirement(
+            builder.Configuration.GetSection(Constants.ConfigurationSectionGeneralSettings)[
+                nameof(GeneralSettings.OedEventAuthQueryParameter)]!,
+            builder.Configuration.GetSection(Constants.ConfigurationSectionSecrets)[
+                nameof(Secrets.OedEventAuthKey)]!));
+        configurePolicy.Build();
     });
 });
 

@@ -19,7 +19,7 @@ public class ExternalAuthorizationController : Controller
 
     [HttpPost]
     [Route("roles")]
-    [Authorize(Policy = Constants.AuthorizationPolicyForExternals)]
+    [Authorize(Policy = Constants.AuthorizationPolicyExternal)]
     public async Task<ActionResult<ExternalAuthorizationResponse>> GetRoles([FromBody] ExternalAuthorizationRequest externalAuthorizationRequest)
     {
         try
@@ -44,7 +44,8 @@ public class ExternalAuthorizationController : Controller
             throw new ArgumentException("Missing scope claim");
         }
 
-        return scopeClaim.Value.Contains(Constants.ScopeAllRoles);
+        var scopes = scopeClaim.Value.Split(' ');
+        return scopes.Contains(Constants.ScopeAllRoles);
     }
 
     private async Task<ExternalAuthorizationResponse> HandleRequest(ExternalAuthorizationRequest externalAuthorizationRequest, bool probateOnly)
