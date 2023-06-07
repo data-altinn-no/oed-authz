@@ -33,9 +33,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             throw new ArgumentNullException(nameof(daEvent.Data));
 
         }
-        var updatedRoleAssignments = JsonSerializer.Deserialize<List<EventRoleAssignmentData>>(daEvent.Data.ToString()!)!;
+        var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentData>(daEvent.Data.ToString()!)!;
 
-        if (updatedRoleAssignments.Count == 0)
+        if (updatedRoleAssignments.HeirRoles.Count == 0)
         {
             throw new InvalidOperationException(nameof(daEvent.Data));
         }
@@ -46,7 +46,7 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         
         // Find assignments in updated list but not in current list to add
         var assignmentsToAdd = new List<OedRoleAssignment>();
-        foreach (var updatedRoleAssignment in updatedRoleAssignments)
+        foreach (var updatedRoleAssignment in updatedRoleAssignments.HeirRoles)
         {
             if (!Utils.IsValidSsn(updatedRoleAssignment.Nin))
             {
@@ -76,7 +76,7 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         var assignmentsToRemove = new List<OedRoleAssignment>();
         foreach (var currentRoleAssignment in currentRoleAssignments)
         {
-            if (!updatedRoleAssignments.Exists(x =>
+            if (!updatedRoleAssignments.HeirRoles.Exists(x =>
                     x.Nin == currentRoleAssignment.Recipient && x.Role == currentRoleAssignment.RoleCode))
             {
                 assignmentsToRemove.Add(new OedRoleAssignment
