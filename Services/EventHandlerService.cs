@@ -16,6 +16,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
     {
         switch (cloudEvent.Type)
         {
+            case "no.altinn.events.digitalt-dodsbo.v1.case-status-updated":
+                await HandleEstateInstanceCreatedOrUpdated(cloudEvent);
+                break;
             case "no.altinn.events.digitalt-dodsbo.v1.heir-roles-updated":
                 await HandleEstateInstanceCreatedOrUpdated(cloudEvent);
                 break;
