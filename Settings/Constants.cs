@@ -14,8 +14,9 @@ public static class Constants
 
     public const string ScopeInternal = "altinn:dd:internal";
     public const string ScopeProbateOnly = "altinn:dd:authlookup:probateonly";
-    public const string ScopeAllRoles = "altinn:dd:authlookup:allroles";
+    public const string ScopeAllRoles = "altinn:dd:authlookup";
 
     public const string ProbateRoleCode = "urn:digitaltdodsbo:skifteattest";
+    public const string HeirRoleCodePrefix = "urn:digitaltdodsbo:arving:";
 }
 

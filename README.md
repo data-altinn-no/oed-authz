@@ -6,11 +6,17 @@ See https://oed-test-authz-app.azurewebsites.net/swagger/ for API documentation.
 
 ## Using the API for external consumers (banks etc.)
 
-External consumers should use `/api/v1/authorization/roles`. This endpoint requires a Maskinporten-token with one of the following scopes;`altinn:dd:authlookup:probateonly` or `altinn:dd:authlookup:allroles`. Requests with the former will only return role assignments for the role `urn:digitaltdodsbo:skifteattest`, while the latter will return all roles.
+External consumers should use `/api/v1/authorization/roles`. This endpoint requires a Maskinporten-token with the scope; `altinn:dd:authlookup`. The following role codes will be made available
+
+* `urn:digitaltdodsbo:formuesfullmakt` (gitt av domstolene)
+* `urn:digitaltdodsbo:skifteattest` (arving som har påtatt seg gjeldsansvar, gitt av domstolene)
+* `urn:digitaltdodsbo:skiftefullmakt` (fullmektig utpekt av alle arvingene med skifteattest)
+
+Other scopes might be added
 
 ### Example
 
-Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body must be a JSON object with `estateSsn` and `recipientSsn` properties, both being 11-digit norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
+Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body must be a JSON object with `estateSsn`. Optionally, a `recipientSsn` property can be supplied. Both must be 11-digit norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
 
 ```jsonc
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles
@@ -23,10 +29,10 @@ Requests must contain a `Authorization`-header with a Maskinporten-token using t
 Response:
 ```json
 {
-    "estateSsn": "11111111111",
-    "recipientSsn": "22222222211",
     "roleAssignments": [
         {
+            "estateSsn": "11111111111",
+            "recipientSsn": "22222222211",
             "role": "urn:digitaltdodsbo:skifteattest",
             "created": "2023-02-20T10:00:06.401416+00:00"
         }
@@ -36,9 +42,9 @@ Response:
 
 If no relation (ie. role assignement) exists, an empty `roleAssignments` array will be returned.
 
-## Internal usage 
+## Internal Altinn usage 
 
-Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively to the endpoint `/api/v1/pip`. One of the parameters can be omitted to get a list of all relations for the given from/to.
+Supply a `PipRequest`-body with one or both the `from` and `to` properties set to norwegian identification numbers for the deceased (estate) and heir (recipient), respectively to the endpoint `/api/v1/pip`. One of the parameters can be omitted to get a list of all relations for the given from/to. This will include additional roles compared to the API for external consumers.
 
 This requires a Maskinporten-token with the scope `altinn:dd:internal`
 

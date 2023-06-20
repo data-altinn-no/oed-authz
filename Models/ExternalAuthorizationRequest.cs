@@ -6,6 +6,5 @@ public class ExternalAuthorizationRequest
 {
     [Required]
     public string EstateSsn { get; set; } = null!;
-    [Required]
-    public string RecipientSsn { get; set; } = null!;
+    public string? RecipientSsn { get; set; } = null!;
 }
