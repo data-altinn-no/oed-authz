@@ -11,8 +11,6 @@ External consumers should use `/api/v1/authorization/roles`. This endpoint requi
 * `urn:digitaltdodsbo:skifteattest` (heir who has assumed debt responsibility, granted by the courts)
 * `urn:digitaltdodsbo:skiftefullmakt` (proxy appointed by all heirs with a probate certificate)
 
-Other scopes might be added
-
 ### Example
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body must be a JSON object with `estateSsn`. Optionally, a `recipientSsn` property can be supplied. Both must be 11-digit norwegian identification numbers for the deceased (estate) and heir (recipient), respectively.
