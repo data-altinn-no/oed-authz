@@ -58,6 +58,8 @@ public class ExternalAuthorizationController : Controller
 
         var pipResponse = await _pipService.HandlePipRequest(pipRequest);
 
+        RemoveHeirRoles(pipResponse);
+
         if (probateOnly)
         {
             pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(x => x.RoleCode == Constants.ProbateRoleCode).ToList();
@@ -65,15 +67,24 @@ public class ExternalAuthorizationController : Controller
 
         var externalRoleAssignments =
             pipResponse.RoleAssignments.Select(pipRoleAssignment =>
-                new ExternalRoleAssignment { Role = pipRoleAssignment.RoleCode, Created = pipRoleAssignment.Created }).ToList();
+                new ExternalRoleAssignment
+                {
+                    EstateSsn = pipRoleAssignment.From,
+                    RecipientSsn = pipRoleAssignment.To,
+                    Role = pipRoleAssignment.RoleCode,
+                    Created = pipRoleAssignment.Created
+                }).ToList();
 
         var externalAuthorizationResponse = new ExternalAuthorizationResponse
         {
-            EstateSsn = externalAuthorizationRequest.EstateSsn,
-            RecipientSsn = externalAuthorizationRequest.RecipientSsn,
             RoleAssignments = externalRoleAssignments
         };
 
         return externalAuthorizationResponse;
+    }
+
+    private void RemoveHeirRoles(PipResponse pipResponse)
+    {
+        pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(x => !x.RoleCode.StartsWith(Constants.HeirRoleCodePrefix)).ToList();
     }
 }
