@@ -3,14 +3,13 @@ ASP.NET Core Web API handling events for OED/DD roles, persisting them and provi
 
 See https://oed-test-authz-app.azurewebsites.net/swagger/ for API documentation.
 
-
 ## Using the API for external consumers (banks etc.)
 
 External consumers should use `/api/v1/authorization/roles`. This endpoint requires a Maskinporten-token with the scope; `altinn:dd:authlookup`. The following role codes will be made available
 
-* `urn:digitaltdodsbo:formuesfullmakt` (gitt av domstolene)
-* `urn:digitaltdodsbo:skifteattest` (arving som har påtatt seg gjeldsansvar, gitt av domstolene)
-* `urn:digitaltdodsbo:skiftefullmakt` (fullmektig utpekt av alle arvingene med skifteattest)
+* `urn:digitaltdodsbo:formuesfullmakt` (granted by the courts)
+* `urn:digitaltdodsbo:skifteattest` (heir who has assumed debt responsibility, granted by the courts)
+* `urn:digitaltdodsbo:skiftefullmakt` (proxy appointed by all heirs with a probate certificate)
 
 Other scopes might be added
 
