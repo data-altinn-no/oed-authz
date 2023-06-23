@@ -38,10 +38,6 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         }
         var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentData>(daEvent.Data.ToString()!)!;
 
-        if (updatedRoleAssignments.HeirRoles.Count == 0)
-        {
-            throw new InvalidOperationException(nameof(daEvent.Data));
-        }
         // Get all current roles given from this estate
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
         var currentRoleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(estateSsn);
