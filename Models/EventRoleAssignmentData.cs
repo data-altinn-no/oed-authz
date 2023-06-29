@@ -3,7 +3,7 @@
 namespace oed_authz.Models;
 public class EventRoleAssignmentData
 {
-    [JsonPropertyName("daCaseId")]
+    [JsonPropertyName("caseId")]
     public string DaCaseId  { get; set; } = string.Empty;
 
     [JsonPropertyName("heirRoles")]
