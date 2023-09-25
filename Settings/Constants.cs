@@ -13,10 +13,10 @@ public static class Constants
     public const string AuthorizationPolicyExternal = "Externals";
 
     public const string ScopeInternal = "altinn:dd:internal";
-    public const string ScopeProbateOnly = "altinn:dd:authlookup:probateonly";
-    public const string ScopeAllRoles = "altinn:dd:authlookup";
+    public const string ScopeExternal = "altinn:dd:authlookup";
 
-    public const string ProbateRoleCode = "urn:digitaltdodsbo:skifteattest";
-    public const string HeirRoleCodePrefix = "urn:digitaltdodsbo:arving:";
+    public const string HeirRoleCodePrefix = "urn:domstolene:digitaltdodsbo:arving:";
+    public const string ProxyRoleCodePrefix = "urn:altinn:digitaltdodsbo:skiftefullmakt:";
+    public const string IndividualProxyRoleCode = "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell";
 }
 
