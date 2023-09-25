@@ -1,5 +1,6 @@
 ﻿using oed_authz.Interfaces;
 using oed_authz.Models;
+using oed_authz.Settings;
 
 namespace oed_authz.Services;
 
@@ -45,6 +46,11 @@ public class PapService : IPolicyAdministrationPointService
 
     private void ValidateRequest(PapRequest papRequest)
     {
+        if (!papRequest.RoleAssignment.RoleCode.StartsWith(Constants.ProxyRoleCodePrefix))
+        {
+            throw new ArgumentException("Rolecode must start with " + Constants.ProxyRoleCodePrefix);
+        }
+
         if (!Utils.IsValidSsn(papRequest.EstateSsn))
         {
             throw new ArgumentException(nameof(papRequest.RoleAssignment.To));

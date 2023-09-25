@@ -15,6 +15,7 @@ public static class Constants
     public const string ScopeInternal = "altinn:dd:internal";
     public const string ScopeExternal = "altinn:dd:authlookup";
 
+    public const string CourtRoleCodePrefix = "urn:domstolene:digitaltdodsbo:";
     public const string HeirRoleCodePrefix = "urn:domstolene:digitaltdodsbo:arving:";
     public const string ProxyRoleCodePrefix = "urn:altinn:digitaltdodsbo:skiftefullmakt:";
     public const string IndividualProxyRoleCode = "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell";

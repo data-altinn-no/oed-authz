@@ -2,6 +2,7 @@
 using oed_authz.Interfaces;
 using oed_authz.Models;
 using oed_authz.Models.Dto;
+using oed_authz.Settings;
 
 namespace oed_authz.Services;
 public class AltinnEventHandlerService : IAltinnEventHandlerService
@@ -43,7 +44,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
         var currentRoleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(estateSsn);
 
-        
+        // Filter out all role assignments that are not court assigned
+        currentRoleAssignments = currentRoleAssignments.Where(x => x.RoleCode.StartsWith(Constants.CourtRoleCodePrefix)).ToList();
+
         // Find assignments in updated list but not in current list to add
         var assignmentsToAdd = new List<RepositoryRoleAssignment>();
         foreach (var updatedRoleAssignment in updatedRoleAssignments.HeirRoles)
@@ -58,6 +61,12 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             if (currentRoleAssignments.Any(x => x.Created >= daEvent.Time))
             {
                 return;
+            }
+
+            // Check that all role codes are within the correct namespace
+            if (!updatedRoleAssignment.Role.StartsWith(Constants.CourtRoleCodePrefix))
+            {
+                throw new ArgumentException("Rolecode must start with " + Constants.CourtRoleCodePrefix);
             }
 
             if (!currentRoleAssignments.Exists(x => x.Recipient == updatedRoleAssignment.Nin && x.RoleCode == updatedRoleAssignment.Role))
