@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using oed_authz.Interfaces;
 using oed_authz.Models;
+using oed_authz.Models.Dto;
+using oed_authz.Settings;
 
 namespace oed_authz.Services;
 public class AltinnEventHandlerService : IAltinnEventHandlerService
@@ -36,15 +38,17 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
             throw new ArgumentNullException(nameof(daEvent.Data));
 
         }
-        var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentData>(daEvent.Data.ToString()!)!;
+        var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentDataDto>(daEvent.Data.ToString()!)!;
 
         // Get all current roles given from this estate
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
         var currentRoleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(estateSsn);
 
-        
+        // Filter out all role assignments that are not court assigned
+        currentRoleAssignments = currentRoleAssignments.Where(x => x.RoleCode.StartsWith(Constants.CourtRoleCodePrefix)).ToList();
+
         // Find assignments in updated list but not in current list to add
-        var assignmentsToAdd = new List<OedRoleAssignment>();
+        var assignmentsToAdd = new List<RepositoryRoleAssignment>();
         foreach (var updatedRoleAssignment in updatedRoleAssignments.HeirRoles)
         {
             if (!Utils.IsValidSsn(updatedRoleAssignment.Nin))
@@ -59,9 +63,15 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
                 return;
             }
 
+            // Check that all role codes are within the correct namespace
+            if (!updatedRoleAssignment.Role.StartsWith(Constants.CourtRoleCodePrefix))
+            {
+                throw new ArgumentException("Rolecode must start with " + Constants.CourtRoleCodePrefix);
+            }
+
             if (!currentRoleAssignments.Exists(x => x.Recipient == updatedRoleAssignment.Nin && x.RoleCode == updatedRoleAssignment.Role))
             {
-                assignmentsToAdd.Add(new OedRoleAssignment
+                assignmentsToAdd.Add(new RepositoryRoleAssignment
                 {
                     EstateSsn = estateSsn,
                     Recipient = updatedRoleAssignment.Nin,
@@ -72,13 +82,13 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         }
 
         // Find assignments in current list that's not in the updated list. These should be removed.
-        var assignmentsToRemove = new List<OedRoleAssignment>();
+        var assignmentsToRemove = new List<RepositoryRoleAssignment>();
         foreach (var currentRoleAssignment in currentRoleAssignments)
         {
             if (!updatedRoleAssignments.HeirRoles.Exists(x =>
                     x.Nin == currentRoleAssignment.Recipient && x.Role == currentRoleAssignment.RoleCode))
             {
-                assignmentsToRemove.Add(new OedRoleAssignment
+                assignmentsToRemove.Add(new RepositoryRoleAssignment
                 {
                     EstateSsn = estateSsn,
                     Recipient = currentRoleAssignment.Recipient,

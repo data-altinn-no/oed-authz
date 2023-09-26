@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace oed_authz.Models;
-public class EventRoleAssignment
+namespace oed_authz.Models.Dto;
+public class EventRoleAssignmentDto
 {
     [JsonPropertyName("nin")]
     public string Nin { get; set; } = string.Empty;

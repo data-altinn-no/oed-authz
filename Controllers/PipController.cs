@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using oed_authz.Interfaces;
 using oed_authz.Models;
+using oed_authz.Models.Dto;
 using oed_authz.Settings;
 
 namespace oed_authz.Controllers;
@@ -18,11 +19,11 @@ public class PipController : Controller
     [HttpPost]
     [Authorize(Policy = Constants.AuthorizationPolicyInternal)]
     [Route("api/v1/pip")]
-    public async Task<ActionResult<PipResponse>> HandlePipRequest([FromBody] PipRequest pipRequest)
+    public async Task<ActionResult<PipResponseDto>> HandlePipRequest([FromBody] PipRequestDto pipRequestDto)
     {
         try
         {
-            return Ok(await _pipService.HandlePipRequest(pipRequest));
+            return Ok( await HandleRequest(pipRequestDto));
         }
         catch (ArgumentException ex)
         {
@@ -32,5 +33,39 @@ public class PipController : Controller
                 statusCode: StatusCodes.Status400BadRequest
             );
         }
+    }
+
+    private async Task<PipResponseDto> HandleRequest(PipRequestDto pipRequestDto)
+    {
+        var pipRequest = new PipRequest()
+        {
+            EstateSsn = pipRequestDto.From,
+            RecipientSsn = pipRequestDto.To
+        };
+
+        var pipResponse = await _pipService.HandlePipRequest(pipRequest);
+
+        RemoveIndividualProxyRole(pipResponse);
+
+        var pipRoleAssignmentsDto = pipResponse.RoleAssignments.Select(assignment =>
+            new PipRoleAssignmentDto
+            {
+                From = assignment.From,
+                To = assignment.To,
+                Role = assignment.RoleCode,
+                Created = assignment.Created
+            }).ToList();
+
+        var pipResponseDto = new PipResponseDto()
+        {
+            RoleAssignments = pipRoleAssignmentsDto
+        };
+
+        return pipResponseDto;
+    }
+
+    private void RemoveIndividualProxyRole(PipResponse pipResponse)
+    {
+        pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(x => !x.RoleCode.Equals(Constants.IndividualProxyRoleCode)).ToList();
     }
 }

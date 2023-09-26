@@ -1,9 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace oed_authz.Models;
+﻿namespace oed_authz.Models;
 
 public class PipRequest
 {
-    public string? From { get; init; }
-    public string? To { get; init; }
+    public string? EstateSsn { get; init; }
+    public string? RecipientSsn { get; init; }
 }

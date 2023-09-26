@@ -20,7 +20,8 @@ builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection(Con
 
 builder.Services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
 builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
-builder.Services.AddSingleton<IPolicyInformationPointService, PolicyInformationPointService>();
+builder.Services.AddSingleton<IPolicyInformationPointService, PipService>();
+builder.Services.AddSingleton<IPolicyAdministrationPointService, PapService>();
 builder.Services.AddScoped<IAuthorizationHandler, QueryParamRequirementHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ScopeRequirementHandler>();
 
@@ -84,7 +85,7 @@ builder.Services.AddAuthorization(options =>
         configurePolicy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(Constants.MaskinportenAuthentication, Constants.MaskinportenAuxillaryAuthentication)
-            .AddRequirements(new ScopeRequirement(new[] { Constants.ScopeProbateOnly, Constants.ScopeAllRoles }))
+            .AddRequirements(new ScopeRequirement(Constants.ScopeExternal))
             .Build();
     });
 
