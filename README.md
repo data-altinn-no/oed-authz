@@ -11,7 +11,7 @@ assigned from the heirs to others within the estate.
 
 ### Court assigned roles
 
-For court assigned roles use `/api/v1/authorization/roles`. This endpoint requires a Maskinporten-token with the scope; 
+For court assigned roles use `/api/v1/authorization/roles/search`. This endpoint requires a Maskinporten-token with the scope; 
 `altinn:dd:authlookup`. The following role codes will be made available
 
 * `urn:domstolene:digitaltdodsbo:formuesfullmakt` 
@@ -20,11 +20,10 @@ For court assigned roles use `/api/v1/authorization/roles`. This endpoint requir
 #### Example
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body 
-must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. Optionally, a
-`recipientSsn` can be supplied to only retrieve roles assigned to a specific recipient for the given estate.
+must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. 
 
 ```jsonc
-// POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles
+// POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles/search
 {
     "estateSsn": "11111111111"
 }
@@ -36,13 +35,11 @@ Response:
     "estateSsn": "11111111111",
     "roleAssignments": [
         {
-            "estateSsn": "11111111111",
             "recipientSsn": "22222222211",
             "role": "urn:domstolene:digitaltdodsbo:skifteattest",
             "created": "2023-02-20T10:00:06.401416+00:00"
         },
         {
-            "estateSsn": "11111111111",
             "recipientSsn": "22222222211",
             "role": "urn:domstolene:digitaltdodsbo:skifteattest",
             "created": "2023-02-20T10:00:06.401416+00:00"
@@ -70,8 +67,7 @@ If no relation (ie. role assignment) exists, an empty `roleAssignments` array wi
 #### Example
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body
-must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. Optionally, a
-`recipientSsn` can be supplied to only retrieve roles assigned to a specific recipient for the given estate.
+must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. 
 
 ```jsonc
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/proxies/search
