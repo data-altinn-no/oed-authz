@@ -9,7 +9,7 @@ DO $$
     DECLARE
         max_id BIGINT;
     BEGIN
-        SELECT COALESCE(MAX("id"), 0) INTO max_id FROM oedauthz.roleassignments;
+        SELECT COALESCE(MAX("id"), 1) INTO max_id FROM oedauthz.roleassignments;
         PERFORM setval(pg_get_serial_sequence('oedauthz.roleassignments', 'id'), max_id);
     END
 $$;
@@ -41,7 +41,7 @@ DO $$
     DECLARE
         max_log_id BIGINT;
     BEGIN
-        SELECT COALESCE(MAX("id"), 0) INTO max_log_id FROM oedauthz.roleassignments_log;
+        SELECT COALESCE(MAX("id"), 1) INTO max_log_id FROM oedauthz.roleassignments_log;
         PERFORM setval(pg_get_serial_sequence('oedauthz.roleassignments_log', 'id'), max_log_id);
     END
 $$;
