@@ -43,7 +43,7 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
 
         var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentDataDto>(daEvent.Data.ToString()!)!;
 
-        _logger.LogInformation("Handling event: {CloudEvent}", JsonSerializer.Serialize(daEvent));
+        _logger.LogInformation("Handling event {Id}: {CloudEvent}", daEvent.Id, JsonSerializer.Serialize(daEvent));
 
         // Get all current roles given from this estate
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);
@@ -101,6 +101,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
                 });
             }
         }
+
+        _logger.LogInformation("Handling event {Id}: {AssignmentsToAdd} assignments to add and {AssignmentsToRemove} assignments to remove",
+            daEvent.Id, assignmentsToAdd.Count, assignmentsToRemove.Count);
 
         foreach (var roleAssignment in assignmentsToAdd)
         {

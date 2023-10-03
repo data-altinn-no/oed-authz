@@ -5,6 +5,12 @@ namespace oed_authz.Models;
 public class CloudEvent
 {
     /// <summary>
+    /// Gets or sets the id of the event.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = null!;
+
+    /// <summary>
     /// Gets or sets the specification version of the event.
     /// </summary>
     [JsonPropertyName("specversion")]
