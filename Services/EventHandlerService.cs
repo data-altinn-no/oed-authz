@@ -8,10 +8,12 @@ namespace oed_authz.Services;
 public class AltinnEventHandlerService : IAltinnEventHandlerService
 {
     private readonly IOedRoleRepositoryService _oedRoleRepositoryService;
+    private readonly ILogger<AltinnEventHandlerService> _logger;
 
-    public AltinnEventHandlerService(IOedRoleRepositoryService oedRoleRepositoryService)
+    public AltinnEventHandlerService(IOedRoleRepositoryService oedRoleRepositoryService, ILogger<AltinnEventHandlerService> logger)
     {
         _oedRoleRepositoryService = oedRoleRepositoryService;
+        _logger = logger;
     }
 
     public async Task HandleEvent(CloudEvent cloudEvent)
@@ -35,10 +37,13 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
     {
         if (daEvent.Data == null)
         {
+            _logger.LogError("Empty data in event: {CloudEvent}", JsonSerializer.Serialize(daEvent));
             throw new ArgumentNullException(nameof(daEvent.Data));
-
         }
+
         var updatedRoleAssignments = JsonSerializer.Deserialize<EventRoleAssignmentDataDto>(daEvent.Data.ToString()!)!;
+
+        _logger.LogInformation("Handling event: {CloudEvent}", JsonSerializer.Serialize(daEvent));
 
         // Get all current roles given from this estate
         var estateSsn = Utils.GetEstateSsnFromCloudEvent(daEvent);

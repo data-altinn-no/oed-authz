@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using oed_authz.Authorization;
@@ -27,7 +28,37 @@ builder.Services.AddScoped<IAuthorizationHandler, ScopeRequirementHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddLogging();
+
+var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+if (!string.IsNullOrEmpty(appInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry(options =>
+    {
+        options.ConnectionString = appInsightsConnectionString;
+    });
+    builder.Services.AddLogging(logging =>
+    {
+        logging.AddApplicationInsights();
+        logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information); // Set the minimum log level to Information
+    });
+}
+else
+{
+    // Add logging to console if no Application Insights connection string is found
+    builder.Services.AddLogging();
+}
+
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+});
+
+builder.Services.AddLogging(logging =>
+{
+    logging.AddApplicationInsights();
+    logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information); // Set the minimum log level to Information
+});
+
 builder.Services.AddProblemDetails();
 builder.Services.AddAuthentication(options =>
     {

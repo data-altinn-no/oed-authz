@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using oed_authz.Interfaces;
@@ -8,11 +9,13 @@ using oed_authz.Settings;
 namespace oed_authz.Services;
 public class OedRoleRepositoryService : IOedRoleRepositoryService
 {
+    private readonly ILogger<OedRoleRepositoryService> _logger;
     private readonly NpgsqlDataSourceBuilder _dataSourceBuilder;
     private NpgsqlDataSource? _dataSource;
 
-    public OedRoleRepositoryService(IOptions<Secrets> connectionStrings)
+    public OedRoleRepositoryService(IOptions<Secrets> connectionStrings, ILogger<OedRoleRepositoryService> logger)
     {
+        _logger = logger;
         _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStrings.Value.PostgreSqlUserConnectionString);
     }
 
@@ -27,6 +30,8 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
     public async Task AddRoleAssignment(RepositoryRoleAssignment roleAssignment)
     {
+        _logger.LogInformation("Granting role: {RoleAssignment}", JsonSerializer.Serialize(roleAssignment));
+
         _dataSource ??= _dataSourceBuilder.Build();
 
         await using var cmd = _dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"heirSsn\", \"created\") VALUES ($1, $2, $3, $4, $5)");
@@ -41,6 +46,8 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
     public async Task RemoveRoleAssignment(RepositoryRoleAssignment roleAssignment)
     {
+        _logger.LogInformation("Revoking role: {RoleAssignment}", JsonSerializer.Serialize(roleAssignment));
+
         _dataSource ??= _dataSourceBuilder.Build();
 
         // Base query
