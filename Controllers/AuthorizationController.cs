@@ -116,7 +116,8 @@ public class AuthorizationController : Controller
 
         var pipResponse = await _pipService.HandlePipRequest(pipRequest);
 
-        RemoveHeirRoles(pipResponse);
+        // We only want to return the roles assigned by the court (not including heir relation roles)
+        FilterCourtRoles(pipResponse);
 
         var roleAssignmentDtos =
             pipResponse.RoleAssignments.Select(pipRoleAssignment =>
@@ -145,7 +146,8 @@ public class AuthorizationController : Controller
 
         var pipResponse = await _pipService.HandlePipRequest(pipRequest);
 
-        RemoveNonProxyRoles(pipResponse);
+        // We only want to return the proxy roles (not including court roles or heir relation roles)
+        FilterProxyRoles(pipResponse);
 
         var proxyAssignmentDtos =
             pipResponse.RoleAssignments.Select(pipRoleAssignment =>
@@ -199,12 +201,14 @@ public class AuthorizationController : Controller
         await _papService.Remove(papRequest);
     }
 
-    private void RemoveHeirRoles(PipResponse pipResponse)
+    private void FilterCourtRoles(PipResponse pipResponse)
     {
-        pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(x => !x.RoleCode.StartsWith(Constants.HeirRoleCodePrefix)).ToList();
+        pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(
+            x => x.RoleCode.StartsWith(Constants.CourtRoleCodePrefix)
+                 && !x.RoleCode.StartsWith(Constants.HeirRoleCodePrefix)).ToList();
     }
 
-    private void RemoveNonProxyRoles(PipResponse pipResponse)
+    private void FilterProxyRoles(PipResponse pipResponse)
     {
         pipResponse.RoleAssignments = pipResponse.RoleAssignments.Where(x => x.RoleCode.StartsWith(Constants.ProxyRoleCodePrefix)).ToList();
     }
