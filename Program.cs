@@ -132,6 +132,14 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAzurePortal",
+        builder => builder.WithOrigins("https://portal.azure.com")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
 if (builder.Environment.IsDevelopment())
 {
     IdentityModelEventSource.ShowPII = true;
@@ -139,6 +147,8 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+app.UseCors("AllowAzurePortal");
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -149,6 +159,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 
 var traceService = new ConsoleTraceService { IsDebugEnabled = true };
 app.UseYuniql(
