@@ -113,6 +113,18 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         foreach (var roleAssignment in assignmentsToRemove)
         {
             await _oedRoleRepositoryService.RemoveRoleAssignment(roleAssignment);
+
+            if (roleAssignment.RoleCode != Constants.ProbateRoleCode) continue;
+
+            // In case there are any individual proxy roles granted from this heir for this estate, we need to remove them as well
+            var roleAssignmentsForEstate =
+                await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(roleAssignment.EstateSsn);
+            // Get all the assignments where this (former) asignee was the heirSsn
+            var individualProxyRoleAssignments = roleAssignmentsForEstate.Where(x => x.HeirSsn == roleAssignment.Recipient).ToList();
+            foreach (var individualProxyRoleAssignment in individualProxyRoleAssignments)
+            {
+                await _oedRoleRepositoryService.RemoveRoleAssignment(individualProxyRoleAssignment);
+            }
         }
     }
 }
