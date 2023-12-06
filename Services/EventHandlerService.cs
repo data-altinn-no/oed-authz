@@ -8,11 +8,16 @@ namespace oed_authz.Services;
 public class AltinnEventHandlerService : IAltinnEventHandlerService
 {
     private readonly IOedRoleRepositoryService _oedRoleRepositoryService;
+    private readonly IProxyManagementService _proxyManagementService;
     private readonly ILogger<AltinnEventHandlerService> _logger;
 
-    public AltinnEventHandlerService(IOedRoleRepositoryService oedRoleRepositoryService, ILogger<AltinnEventHandlerService> logger)
+    public AltinnEventHandlerService(
+        IOedRoleRepositoryService oedRoleRepositoryService,
+        IProxyManagementService proxyManagementService,
+        ILogger<AltinnEventHandlerService> logger)
     {
         _oedRoleRepositoryService = oedRoleRepositoryService;
+        _proxyManagementService = proxyManagementService;
         _logger = logger;
     }
 
@@ -74,12 +79,12 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
                 throw new ArgumentException("Rolecode must start with " + Constants.CourtRoleCodePrefix);
             }
 
-            if (!currentRoleAssignments.Exists(x => x.Recipient == updatedRoleAssignment.Nin && x.RoleCode == updatedRoleAssignment.Role))
+            if (!currentRoleAssignments.Exists(x => x.RecipientSsn == updatedRoleAssignment.Nin && x.RoleCode == updatedRoleAssignment.Role))
             {
                 assignmentsToAdd.Add(new RepositoryRoleAssignment
                 {
                     EstateSsn = estateSsn,
-                    Recipient = updatedRoleAssignment.Nin,
+                    RecipientSsn = updatedRoleAssignment.Nin,
                     RoleCode = updatedRoleAssignment.Role,
                     Created = daEvent.Time
                 });
@@ -91,12 +96,12 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         foreach (var currentRoleAssignment in currentRoleAssignments)
         {
             if (!updatedRoleAssignments.HeirRoles.Exists(x =>
-                    x.Nin == currentRoleAssignment.Recipient && x.Role == currentRoleAssignment.RoleCode))
+                    x.Nin == currentRoleAssignment.RecipientSsn && x.Role == currentRoleAssignment.RoleCode))
             {
                 assignmentsToRemove.Add(new RepositoryRoleAssignment
                 {
                     EstateSsn = estateSsn,
-                    Recipient = currentRoleAssignment.Recipient,
+                    RecipientSsn = currentRoleAssignment.RecipientSsn,
                     RoleCode = currentRoleAssignment.RoleCode
                 });
             }
@@ -113,18 +118,9 @@ public class AltinnEventHandlerService : IAltinnEventHandlerService
         foreach (var roleAssignment in assignmentsToRemove)
         {
             await _oedRoleRepositoryService.RemoveRoleAssignment(roleAssignment);
-
-            if (roleAssignment.RoleCode != Constants.ProbateRoleCode) continue;
-
-            // In case there are any individual proxy roles granted from this heir for this estate, we need to remove them as well
-            var roleAssignmentsForEstate =
-                await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(roleAssignment.EstateSsn);
-            // Get all the assignments where this (former) asignee was the heirSsn
-            var individualProxyRoleAssignments = roleAssignmentsForEstate.Where(x => x.HeirSsn == roleAssignment.Recipient).ToList();
-            foreach (var individualProxyRoleAssignment in individualProxyRoleAssignments)
-            {
-                await _oedRoleRepositoryService.RemoveRoleAssignment(individualProxyRoleAssignment);
-            }
         }
+
+        // Handle collective proxy roles
+        await _proxyManagementService.UpdateProxyRoleAssigments(estateSsn);
     }
 }

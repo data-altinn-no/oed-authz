@@ -43,7 +43,7 @@ public class PipController : Controller
             RecipientSsn = pipRequestDto.To
         };
 
-        var pipResponse = await _pipService.HandlePipRequest(pipRequest);
+        var pipResponse = await _pipService.HandlePipRequest(pipRequest, filterFormuesfullmakt: true);
 
         // The roles where there is an heir involved will have three parties (estate, heir and recipient) and
         // is thus not appropiate for this endpoint. This includes the individual proxy role.
@@ -52,8 +52,8 @@ public class PipController : Controller
         var pipRoleAssignmentsDto = pipResponse.RoleAssignments.Select(assignment =>
             new PipRoleAssignmentDto
             {
-                From = assignment.From,
-                To = assignment.To,
+                From = assignment.EstateSsn,
+                To = assignment.RecipientSsn,
                 Role = assignment.RoleCode,
                 Created = assignment.Created
             }).ToList();

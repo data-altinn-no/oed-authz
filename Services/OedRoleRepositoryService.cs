@@ -24,9 +24,11 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
         _dataSource?.Dispose();
     }
 
-    public async Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? recipientSsnOnly = null) => await Query(estateSsn, recipientSsnOnly);
+    public async Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? filterRecipentSsn = null, string? filterRoleCode = null, bool filterFormuesFullmakt = false)
+        => await Query(estateSsn, filterRecipentSsn, filterRoleCode, filterFormuesFullmakt);
     
-    public async Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForPerson(string recipientSsn, string? estateSsnOnly = null) => await Query(estateSsnOnly, recipientSsn);
+    public async Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForPerson(string recipientSsn, string? filterEstateSsn = null, string? filterRoleCode = null, bool filterFormuesFullmakt = false)
+        => await Query(filterEstateSsn, recipientSsn, filterRoleCode, filterFormuesFullmakt);
 
     public async Task AddRoleAssignment(RepositoryRoleAssignment roleAssignment)
     {
@@ -36,7 +38,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
         await using var cmd = _dataSource.CreateCommand("INSERT INTO oedauthz.roleassignments (\"estateSsn\", \"recipientSsn\", \"roleCode\", \"heirSsn\", \"created\") VALUES ($1, $2, $3, $4, $5)");
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
-        cmd.Parameters.AddWithValue(roleAssignment.Recipient);
+        cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
         cmd.Parameters.AddWithValue(roleAssignment.HeirSsn ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue(roleAssignment.Created);
@@ -64,7 +66,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
 
         await using var cmd = _dataSource.CreateCommand(query.ToString());
         cmd.Parameters.AddWithValue(roleAssignment.EstateSsn);
-        cmd.Parameters.AddWithValue(roleAssignment.Recipient);
+        cmd.Parameters.AddWithValue(roleAssignment.RecipientSsn);
         cmd.Parameters.AddWithValue(roleAssignment.RoleCode);
 
         if (roleAssignment.HeirSsn != null)
@@ -75,33 +77,72 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
         await cmd.ExecuteNonQueryAsync();
     }
 
+    private const string BaseSql = $"""
+        SELECT "id", "estateSsn", "recipientSsn", "roleCode", "heirSsn", "created"
+        FROM oedauthz.roleassignments ra
+        WHERE 1=1
+        """;
 
-    private async Task<List<RepositoryRoleAssignment>> Query(string? estateSsn, string? recipientSsn)
+    private const string BaseSqlWithFormuesfullmaktFiltering = $"""
+        SELECT "id", "estateSsn", "recipientSsn", "roleCode", "heirSsn", "created"
+        FROM oedauthz.roleassignments ra
+        WHERE (ra."roleCode" != '{Constants.FormuesfullmaktRoleCode}'
+        OR NOT EXISTS (
+            SELECT 1 FROM oedauthz.roleassignments ra2
+            WHERE ra2."estateSsn" = ra."estateSsn"
+            AND ra2."roleCode" = '{Constants.ProbateRoleCode}'
+        ))
+        """;
+
+    private async Task<List<RepositoryRoleAssignment>> Query(string? estateSsn, string? recipientSsn, string? roleCode, bool filterFormuesfullmakt = false)
     {
         _dataSource ??= _dataSourceBuilder.Build();
 
-        var sqlBuilder = new StringBuilder("SELECT \"id\", \"estateSsn\", \"recipientSsn\", \"roleCode\", \"heirSsn\", \"created\" FROM oedauthz.roleassignments");
-
+        var sqlBuilder = new StringBuilder(filterFormuesfullmakt ? BaseSqlWithFormuesfullmaktFiltering : BaseSql);
         NpgsqlCommand cmd;
 
         if (estateSsn != null && recipientSsn != null)
         {
-            sqlBuilder.Append(" WHERE \"estateSsn\" = $1 AND \"recipientSsn\" = $2");
+            sqlBuilder.Append(" AND \"estateSsn\" = $1 AND \"recipientSsn\" = $2");
+            if (roleCode != null)
+            {
+                sqlBuilder.Append(" AND \"roleCode\" = $3");
+            }
             cmd = _dataSource.CreateCommand(sqlBuilder.ToString());
             cmd.Parameters.AddWithValue(estateSsn);
             cmd.Parameters.AddWithValue(recipientSsn);
+            if (roleCode != null)
+            {
+                cmd.Parameters.AddWithValue(roleCode);
+            }
         }
         else if (estateSsn != null)
         {
-            sqlBuilder.Append(" WHERE \"estateSsn\" = $1");
+            sqlBuilder.Append(" AND \"estateSsn\" = $1");
+            if (roleCode != null)
+            {
+                sqlBuilder.Append(" AND \"roleCode\" = $2");
+            }
             cmd = _dataSource.CreateCommand(sqlBuilder.ToString());
             cmd.Parameters.AddWithValue(estateSsn);
+            if (roleCode != null)
+            {
+                cmd.Parameters.AddWithValue(roleCode);
+            }
         }
         else if (recipientSsn != null)
         {
-            sqlBuilder.Append(" WHERE \"recipientSsn\" = $1");
+            sqlBuilder.Append(" AND \"recipientSsn\" = $1");
+            if (roleCode != null)
+            {
+                sqlBuilder.Append(" AND \"roleCode\" = $2");
+            }
             cmd = _dataSource.CreateCommand(sqlBuilder.ToString());
             cmd.Parameters.AddWithValue(recipientSsn);
+            if (roleCode != null)
+            {
+                cmd.Parameters.AddWithValue(roleCode);
+            }
         }
         else
         {
@@ -119,7 +160,7 @@ public class OedRoleRepositoryService : IOedRoleRepositoryService
                 {
                     Id = reader.GetInt64(0),
                     EstateSsn = reader.GetString(1),
-                    Recipient = reader.GetString(2),
+                    RecipientSsn = reader.GetString(2),
                     RoleCode = reader.GetString(3),
                     HeirSsn = !reader.IsDBNull(4) ? reader.GetString(4) : null,
                     Created = reader.GetDateTime(5)

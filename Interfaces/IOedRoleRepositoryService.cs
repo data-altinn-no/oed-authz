@@ -3,8 +3,8 @@
 namespace oed_authz.Interfaces;
 public interface IOedRoleRepositoryService
 {
-    public Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? recipientSsnOnly = null);
-    public Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForPerson(string recipientSsn, string? estateSsnOnly = null);
+    public Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForEstate(string estateSsn, string? filterRecipentSsn = null, string? filterRoleCode = null, bool filterFormuesFullmakt = false);
+    public Task<List<RepositoryRoleAssignment>> GetRoleAssignmentsForPerson(string recipientSsn, string? filterEstateSsn = null, string? filterRoleCode = null, bool filterFormuesFullmakt = false);
     public Task AddRoleAssignment(RepositoryRoleAssignment roleAssignment);
     public Task RemoveRoleAssignment(RepositoryRoleAssignment roleAssignment);
 }

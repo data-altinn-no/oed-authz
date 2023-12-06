@@ -13,9 +13,9 @@ namespace oed_authz.Controllers;
 public class AuthorizationController : Controller
 {
     private readonly IPolicyInformationPointService _pipService;
-    private readonly IPolicyAdministrationPointService _papService;
+    private readonly IProxyManagementService _papService;
 
-    public AuthorizationController(IPolicyInformationPointService pipService, IPolicyAdministrationPointService papService)
+    public AuthorizationController(IPolicyInformationPointService pipService, IProxyManagementService papService)
     {
         _pipService = pipService;
         _papService = papService;
@@ -111,6 +111,7 @@ public class AuthorizationController : Controller
     {
         var pipRequest = new PipRequest
         {
+            RecipientSsn = rolesSearchRequestDto.RecipientSsn,
             EstateSsn = rolesSearchRequestDto.EstateSsn
         };
 
@@ -123,14 +124,14 @@ public class AuthorizationController : Controller
             pipResponse.RoleAssignments.Select(pipRoleAssignment =>
                 new RoleAssignmentDto()
                 {
-                    RecipientSsn = pipRoleAssignment.To,
+                    EstateSsn = pipRoleAssignment.EstateSsn,
+                    RecipientSsn = pipRoleAssignment.RecipientSsn,
                     Role = pipRoleAssignment.RoleCode,
                     Created = pipRoleAssignment.Created
                 }).ToList();
 
         var rolesSearchResponseDto = new RolesSearchResponseDto()
         {
-            EstateSsn = rolesSearchRequestDto.EstateSsn,
             RoleAssignments = roleAssignmentDtos
         };
 
@@ -141,6 +142,7 @@ public class AuthorizationController : Controller
     {
         var pipRequest = new PipRequest
         {
+            RecipientSsn = proxySearchRequestDto.RecipientSsn,
             EstateSsn = proxySearchRequestDto.EstateSsn
         };
 
@@ -153,15 +155,15 @@ public class AuthorizationController : Controller
             pipResponse.RoleAssignments.Select(pipRoleAssignment =>
                 new ProxySearchAssignmentDto()
                 {
-                    To = pipRoleAssignment.To,
-                    From = pipRoleAssignment.From,
+                    EstateSsn = pipRoleAssignment.EstateSsn,
+                    HeirSsn = pipRoleAssignment.HeirSsn,
+                    RecipientSsn = pipRoleAssignment.RecipientSsn,
                     Role = pipRoleAssignment.RoleCode,
                     Created = pipRoleAssignment.Created
                 }).ToList();
 
         var proxySearchResponseDto = new ProxySearchResponseDto()
         {
-            EstateSsn = proxySearchRequestDto.EstateSsn,
             ProxyAssignments = proxyAssignmentDtos
         };
 
@@ -170,13 +172,13 @@ public class AuthorizationController : Controller
 
     private async Task HandleRequest(ProxyAddRequestDto proxyAddRequestDto)
     {
-        var papRequest = new PapRequest
+        var papRequest = new ProxyManagementRequest
         {
             EstateSsn = proxyAddRequestDto.Add.EstateSsn,
-            RoleAssignment = new PapRoleAssignment
+            ProxyRoleAssignment = new ProxyRoleAssignment
             {
-                From = proxyAddRequestDto.Add.From,
-                To = proxyAddRequestDto.Add.To,
+                HeirSsn = proxyAddRequestDto.Add.HeirSsn,
+                RecipientSsn = proxyAddRequestDto.Add.RecipientSsn,
                 RoleCode = proxyAddRequestDto.Add.Role,
                 Created = DateTime.UtcNow
             }
@@ -187,13 +189,13 @@ public class AuthorizationController : Controller
 
     private async Task HandleRequest(ProxyRemoveRequestDto proxyRemoveRequestDto)
     {
-        var papRequest = new PapRequest
+        var papRequest = new ProxyManagementRequest
         {
             EstateSsn = proxyRemoveRequestDto.Remove.EstateSsn,
-            RoleAssignment = new PapRoleAssignment
+            ProxyRoleAssignment = new ProxyRoleAssignment
             {
-                From = proxyRemoveRequestDto.Remove.From,
-                To = proxyRemoveRequestDto.Remove.To,
+                HeirSsn = proxyRemoveRequestDto.Remove.HeirSsn,
+                RecipientSsn = proxyRemoveRequestDto.Remove.RecipientSsn,
                 RoleCode = proxyRemoveRequestDto.Remove.Role
             }
         };

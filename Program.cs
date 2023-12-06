@@ -22,7 +22,7 @@ builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection(Con
 builder.Services.AddSingleton<IAltinnEventHandlerService, AltinnEventHandlerService>();
 builder.Services.AddSingleton<IOedRoleRepositoryService, OedRoleRepositoryService>();
 builder.Services.AddSingleton<IPolicyInformationPointService, PipService>();
-builder.Services.AddSingleton<IPolicyAdministrationPointService, PapService>();
+builder.Services.AddSingleton<IProxyManagementService, ProxyManagementService>();
 builder.Services.AddScoped<IAuthorizationHandler, QueryParamRequirementHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ScopeRequirementHandler>();
 

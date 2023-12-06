@@ -11,7 +11,7 @@ public class PipService : IPolicyInformationPointService
         _oedRoleRepositoryService = oedRoleRepositoryService;
     }
 
-    public async Task<PipResponse> HandlePipRequest(PipRequest pipRequest)
+    public async Task<PipResponse> HandlePipRequest(PipRequest pipRequest, bool filterFormuesfullmakt = false)
     {
         if (pipRequest.RecipientSsn is not null && !Utils.IsValidSsn(pipRequest.RecipientSsn))
         {
@@ -26,15 +26,15 @@ public class PipService : IPolicyInformationPointService
         List<RepositoryRoleAssignment> roleAssignments;
         if (pipRequest.RecipientSsn is not null && pipRequest.EstateSsn is not null)
         {
-            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.RecipientSsn, pipRequest.EstateSsn);
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.RecipientSsn, pipRequest.EstateSsn, filterFormuesFullmakt: filterFormuesfullmakt);
         }
         else if (pipRequest.RecipientSsn is not null)
         {
-            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.RecipientSsn);
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForPerson(pipRequest.RecipientSsn, filterFormuesFullmakt: filterFormuesfullmakt);
         }
         else if (pipRequest.EstateSsn is not null)
         {
-            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(pipRequest.EstateSsn);
+            roleAssignments = await _oedRoleRepositoryService.GetRoleAssignmentsForEstate(pipRequest.EstateSsn, filterFormuesFullmakt: filterFormuesfullmakt);
         }
         else
         {
@@ -47,10 +47,11 @@ public class PipService : IPolicyInformationPointService
             pipRoleAssignments.Add(new PipRoleAssignment
             {
                 Id = result.Id,
+                EstateSsn = result.EstateSsn,
                 RoleCode = result.RoleCode,
                 Created = result.Created,
-                From = result.HeirSsn ?? result.EstateSsn,
-                To = result.Recipient
+                HeirSsn = result.HeirSsn,
+                RecipientSsn = result.RecipientSsn
             });
         }
 

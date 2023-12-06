@@ -4,9 +4,11 @@ namespace oed_authz.Models.Dto;
 
 public class ProxySearchAssignmentDto
 {
-    public string From { get; set; } = null!;
+    public string EstateSsn { get; set; } = null!;
 
-    public string To { get; set; } = null!;
+    public string? HeirSsn { get; set; }
+
+    public string RecipientSsn { get; set; } = null!;
 
     [JsonPropertyName("urn:digitaltdodsbo:rolecode")]
     public string Role { get; set; } = null!;

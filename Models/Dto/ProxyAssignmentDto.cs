@@ -8,10 +8,10 @@ public class ProxyAssignmentDto
     public string EstateSsn { get; set; } = null!;
 
     [JsonRequired]
-    public string From { get; set; } = null!;
+    public string HeirSsn { get; set; } = null!;
 
     [JsonRequired]
-    public string To { get; set; } = null!;
+    public string RecipientSsn { get; set; } = null!;
 
     [JsonRequired]
     [JsonPropertyName("urn:digitaltdodsbo:rolecode")]

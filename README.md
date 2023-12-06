@@ -20,26 +20,28 @@ For court assigned roles use `/api/v1/authorization/roles/search`. This endpoint
 #### Example
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body 
-must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. 
+must be a JSON object with `estateSsn`, or `recipientSsn`, or both, which must be 11-digit norwegian identification numbers. 
 
 ```jsonc
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/roles/search
 {
     "estateSsn": "11111111111"
+    // "recipientSsn": "22222222211" // Only one of "estateSsn" and "recipientSsn" is required
 }
 ```
 
 Response:
 ```jsonc
-{
-    "estateSsn": "11111111111",
+{    
     "roleAssignments": [
         {
+            "estateSsn": "11111111111",
             "recipientSsn": "22222222211",
             "role": "urn:domstolene:digitaltdodsbo:skifteattest",
             "created": "2023-02-20T10:00:06.401416+00:00"
         },
         {
+            "estateSsn": "11111111111",
             "recipientSsn": "22222222211",
             "role": "urn:domstolene:digitaltdodsbo:skifteattest",
             "created": "2023-02-20T10:00:06.401416+00:00"
@@ -59,46 +61,48 @@ The following role codes are currently available:
 
 Note that the `kollektiv` role is assigned if and only if all heirs with a probate certificate have appointed the same 
 proxy. Thus, for a recipient to receive the `kollektiv` role, the response will also contain a `individuell` role for all 
-heirs with a probate certificate to that same recipient. If at any point any of the heirs with a probate certificate 
-revokes their `individuell` role, the `kollektiv` role will also be revoked.
+heirs with a probate certificate to that same recipient (unless that recipient also has a probate certificate; there is 
+no need to assign a proxy role to oneself).  If at any point any of the heirs with a probate certificate revokes their 
+`individuell` role, the `kollektiv` role will also be revoked.
 
 If no relation (ie. role assignment) exists, an empty `roleAssignments` array will be returned.
 
 #### Example
 
 Requests must contain a `Authorization`-header with a Maskinporten-token using the `Bearer` scheme. The request body
-must be a JSON object with `estateSsn`, which must be 11-digit norwegian identification number. 
+must be a JSON object with `estateSsn`, or `recipientSsn`, or both, which must be 11-digit norwegian identification numbers. 
 
 ```jsonc
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/proxies/search
 {
-    "estateSsn": "11111111111"
+    "estateSsn": "11111111111" // this estate has two heirs with probate certificates; 22222222211 and 33333333311
 }
 ```
 
 Response:
 ```jsonc
-{
-    "estateSsn": "11111111111", // this estate has two heirs with probate certificates; 22222222211 and 33333333311
+{    
     "proxyAssignments": [
         {
-            // Assigned from the estate itself; can act on behalf of all heirs
-            "from": "11111111111",
-            "to": "44444444411",
+            "estateSsn": "11111111111",
+            "heirSsn": null, // Assigned from the estate itself (ie no particular heir); can act on behalf of all heirs  
+            "recipientSsn": "44444444411",
             "role": "urn:altinn:digitaltdodsbo:skiftefullmakt:kollektiv",
             "created": "2023-02-20T10:00:06.401416+00:00"
         },
         {
             // Assigned from the individual heir; can act on behalf of that heir
-            "from": "22222222211",
-            "to": "44444444411",
+            "estateSsn": "11111111111",
+            "heirSsn": "22222222211",
+            "recipientSsn": "44444444411",
             "role": "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell",
             "created": "2023-02-20T10:00:06.401416+00:00"
         },
         {
             // Assigned from the individual heir; can act on behalf of that heir
-            "from": "33333333311",
-            "to": "44444444411",
+            "estateSsn": "11111111111",
+            "heirSsn": "33333333311",
+            "recipientSsn": "44444444411",
             "role": "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell",
             "created": "2023-02-20T10:00:06.401416+00:00"
         }
@@ -186,9 +190,9 @@ Post the body below to the `add` endpoint. `created` can be omitted, and will be
 {
     "add": {
         "estateSsn": "11111111111"
-        "from": "11111111111", // Can also be other heir with probate certificate within the estate
-        "to": "22222222211",
-        "urn:digitaltdodsbo:rolecode": "urn:altinn:digitaltdodsbo:skiftefullmakt:kollektiv",
+        "heirSsn": "22222222211",
+        "recipientSsn": "44444444411",
+        "urn:digitaltdodsbo:rolecode": "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell",
         "created": "2023-02-20T10:00:06.401416+00:00"
     }
 }
@@ -197,17 +201,16 @@ Post the body below to the `add` endpoint. `created` can be omitted, and will be
 
 ### Deleting an assignment
 
-Post the body below to the `remove` endpoint. `urn:digitaltdodsbo:rolecode` can be omitted, and will remove all 
-assignments if omitted.
+Post the body below to the `remove` endpoint. 
 
 ```http
 // POST https://oed-test-authz-app.azurewebsites.net/api/v1/authorization/proxies/remove
 {
     "remove": {
         "estateSsn": "11111111111"
-        "from": "11111111111", // Can also be other heir with probate certificate within the estate
-        "to": "22222222211",
-        "urn:digitaltdodsbo:rolecode": "urn:altinn:digitaltdodsbo:skiftefullmakt:kollektiv"
+        "heirSsn": "22222222211",
+        "recipientSsn": "44444444411",
+        "urn:digitaltdodsbo:rolecode": "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell"
     }
 }
  Response: 204 No Content 

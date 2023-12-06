@@ -19,6 +19,8 @@ public static class Constants
     public const string HeirRoleCodePrefix = "urn:domstolene:digitaltdodsbo:arving:";
     public const string ProxyRoleCodePrefix = "urn:altinn:digitaltdodsbo:skiftefullmakt:";
     public const string IndividualProxyRoleCode = "urn:altinn:digitaltdodsbo:skiftefullmakt:individuell";
+    public const string CollectiveProxyRoleCode = "urn:altinn:digitaltdodsbo:skiftefullmakt:kollektiv";
     public const string ProbateRoleCode = "urn:domstolene:digitaltdodsbo:skifteattest";
+    public const string FormuesfullmaktRoleCode = "urn:domstolene:digitaltdodsbo:formuesfullmakt";
 }
 
