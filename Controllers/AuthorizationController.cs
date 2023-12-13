@@ -66,8 +66,7 @@ public class AuthorizationController : Controller
     {
         try
         {
-            await HandleRequest(proxyAddRequestDto);
-            return new ObjectResult(null) { StatusCode = StatusCodes.Status201Created };
+            return new ObjectResult(await HandleRequest(proxyAddRequestDto)) { StatusCode = StatusCodes.Status201Created };
         }
         catch (ArgumentException ex)
         {
@@ -170,7 +169,7 @@ public class AuthorizationController : Controller
         return proxySearchResponseDto;
     }
 
-    private async Task HandleRequest(ProxyAddRequestDto proxyAddRequestDto)
+    private async Task<ProxySearchResponseDto> HandleRequest(ProxyAddRequestDto proxyAddRequestDto)
     {
         var papRequest = new ProxyManagementRequest
         {
@@ -185,6 +184,11 @@ public class AuthorizationController : Controller
         };
 
         await _papService.Add(papRequest);
+
+        return await HandleRequest(new ProxySearchRequestDto
+        {
+            EstateSsn = proxyAddRequestDto.Add.EstateSsn
+        });
     }
 
     private async Task HandleRequest(ProxyRemoveRequestDto proxyRemoveRequestDto)

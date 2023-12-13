@@ -196,7 +196,7 @@ Post the body below to the `add` endpoint. `created` can be omitted, and will be
         "created": "2023-02-20T10:00:06.401416+00:00"
     }
 }
-// Response: 201 Created
+// Response: 201 Created, with the estate with all current proxy assignments (as with /proxies/search)
 ```
 
 ### Deleting an assignment
