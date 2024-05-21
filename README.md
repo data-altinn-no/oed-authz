@@ -1,4 +1,4 @@
-# oed-auzth
+# oed-authz
 ASP.NET Core Web API handling events for OED/DD roles, persisting them and providing av PIP API for Altinn Authorization. 
 This also exposes an API for external consumers requiring Maskinporten-authentication.
 
